@@ -575,9 +575,21 @@ function setupMobileMenu() {
   const mobileMenu = document.getElementById("mobile-menu");
 
   if (toggle && mobileMenu) {
-    toggle.addEventListener("click", () => {
+    // Remover event listeners existentes para evitar duplicados
+    const newToggle = toggle.cloneNode(true);
+    toggle.parentNode.replaceChild(newToggle, toggle);
+    
+    // Agregar el event listener
+    newToggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('🍔 Menú hamburguesa clickeado');
       mobileMenu.classList.toggle("hidden");
     });
+    
+    console.log('✅ Menú móvil configurado correctamente');
+  } else {
+    console.warn('⚠️ No se encontraron elementos del menú móvil:', { toggle: !!toggle, mobileMenu: !!mobileMenu });
   }
 }
 
