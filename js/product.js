@@ -207,6 +207,14 @@ function renderSizeOptions() {
       ${size}
     </button>
   `).join('');
+  
+  // Seleccionar primera talla por defecto
+  if (currentProduct.sizes.length > 0) {
+    const firstSizeButton = sizeContainer.firstElementChild;
+    if (firstSizeButton) {
+      selectSize(currentProduct.sizes[0], firstSizeButton);
+    }
+  }
 }
 
 /**
@@ -327,13 +335,20 @@ function setupEventListeners() {
   
   // Botón agregar al carrito
   document.getElementById('add-to-cart-btn').addEventListener('click', () => {
-    if (!selectedColor || !selectedSize) {
-      showNotification('Por favor selecciona color y talla', 'warning');
-      return;
+    try {
+      if (!selectedColor || !selectedSize) {
+        showNotification('Por favor selecciona color y talla', 'warning');
+        return;
+      }
+      
+      const success = addToCart(currentProduct, selectedColor, selectedSize, quantity);
+      if (success) {
+        showNotification('Producto agregado al carrito', 'success');
+      }
+    } catch (error) {
+      console.error('❌ Error al agregar producto al carrito:', error);
+      showNotification('Error al agregar el producto al carrito', 'error');
     }
-    
-    addToCart(currentProduct, selectedColor, selectedSize, quantity);
-    showNotification('Producto agregado al carrito', 'success');
   });
   
   // Botón WhatsApp

@@ -222,25 +222,25 @@ function createCartHTML() {
     
     return `
       <div class="flex items-center space-x-3 p-3 border-b border-gray-100">
-        <img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-cover rounded">
+        <img src="${item.image}" alt="${item.name}" class="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded flex-shrink-0">
         <div class="flex-1 min-w-0">
-          <h4 class="font-semibold text-sm truncate">${item.name}</h4>
-          <p class="text-xs text-gray-600">${item.color} - ${item.size}</p>
-          <div class="flex items-center space-x-2">
+          <h4 class="font-semibold text-sm sm:text-base truncate">${item.name}</h4>
+          <p class="text-xs text-gray-600 mb-1">${item.color} - ${item.size}</p>
+          <div class="flex items-center space-x-2 mb-1">
             ${originalPriceHTML}
-            <p class="text-sm font-semibold text-gray-900">$${item.price.toLocaleString()}</p>
+            <p class="text-sm sm:text-base font-semibold text-gray-900">$${item.price.toLocaleString()}</p>
           </div>
-          <p class="text-xs text-gray-500">Total: $${itemTotal.toLocaleString()}</p>
+          <p class="text-xs sm:text-sm text-gray-500">Subtotal: $${itemTotal.toLocaleString()}</p>
         </div>
         <div class="flex flex-col items-center space-y-2">
-          <div class="flex items-center space-x-1">
-            <button class="cart-quantity-btn w-6 h-6 flex items-center justify-center border border-gray-300 text-xs hover:bg-gray-100" 
+          <div class="flex items-center space-x-1 bg-gray-50 rounded-lg p-1">
+            <button class="cart-quantity-btn w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center border border-gray-300 rounded text-sm hover:bg-gray-100 active:bg-gray-200 transition-colors" 
                     data-action="decrease" data-id="${item.id}">-</button>
-            <span class="px-2 text-sm font-medium min-w-[2rem] text-center">${item.quantity}</span>
-            <button class="cart-quantity-btn w-6 h-6 flex items-center justify-center border border-gray-300 text-xs hover:bg-gray-100" 
+            <span class="px-3 py-1 text-sm sm:text-base font-medium min-w-[2.5rem] text-center">${item.quantity}</span>
+            <button class="cart-quantity-btn w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center border border-gray-300 rounded text-sm hover:bg-gray-100 active:bg-gray-200 transition-colors" 
                     data-action="increase" data-id="${item.id}">+</button>
           </div>
-          <button class="remove-item text-red-600 hover:text-red-800 text-xs" data-id="${item.id}">
+          <button class="remove-item text-red-600 hover:text-red-800 text-xs sm:text-sm font-medium py-1 px-2 rounded hover:bg-red-50 transition-colors" data-id="${item.id}">
             🗑️ Eliminar
           </button>
         </div>
@@ -249,10 +249,10 @@ function createCartHTML() {
   }).join('');
   
   return `
-    <div class="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-50 flex flex-col">
+    <div class="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-xl z-50 flex flex-col h-full sm:h-auto sm:max-h-screen transition-all duration-300">
       <div class="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50">
         <h2 class="text-xl font-bold text-gray-900">Carrito de Compras</h2>
-        <button class="close-cart text-2xl text-gray-500 hover:text-gray-700 transition-colors">×</button>
+        <button class="close-cart text-2xl text-gray-500 hover:text-gray-700 transition-colors w-8 h-8 flex items-center justify-center">×</button>
       </div>
       
       <div class="flex-1 overflow-y-auto">
@@ -310,11 +310,24 @@ function showCart() {
   
   const cartSidebar = document.createElement('div');
   cartSidebar.id = 'cart-sidebar';
-  cartSidebar.className = 'fixed inset-0 bg-black bg-opacity-50 z-50';
-  cartSidebar.innerHTML = createCartHTML();
+  cartSidebar.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-end items-start sm:items-center sm:justify-center';
+  
+  // Crear contenedor del carrito con mejor responsive
+  const cartContainer = document.createElement('div');
+  cartContainer.innerHTML = createCartHTML();
+  cartSidebar.appendChild(cartContainer);
   
   document.body.appendChild(cartSidebar);
   document.body.style.overflow = 'hidden';
+  
+  // Agregar animación de entrada
+  setTimeout(() => {
+    cartSidebar.classList.add('opacity-100');
+    const cartContent = cartSidebar.querySelector('.w-full');
+    if (cartContent) {
+      cartContent.classList.add('translate-x-0');
+    }
+  }, 10);
   
   setupCartListeners(cartSidebar);
 }
@@ -335,68 +348,96 @@ function hideCart() {
  * @param {HTMLElement} cartSidebar - Elemento del carrito lateral
  */
 function setupCartListeners(cartSidebar) {
-  // Cerrar carrito
-  const closeBtn = cartSidebar.querySelector('.close-cart');
-  if (closeBtn) {
-    closeBtn.addEventListener('click', hideCart);
-  }
-  
-  // Click fuera del carrito para cerrar
-  cartSidebar.addEventListener('click', (e) => {
-    if (e.target === cartSidebar) {
-      hideCart();
+  try {
+    // Cerrar carrito
+    const closeBtn = cartSidebar.querySelector('.close-cart');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', hideCart);
     }
-  });
-  
-  // Controles de cantidad
-  cartSidebar.querySelectorAll('.cart-quantity-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const action = btn.dataset.action;
-      const itemId = parseFloat(btn.dataset.id);
-      const item = cart.find(i => i.id === itemId);
-      
-      if (!item) return;
-      
-      let newQuantity = item.quantity;
-      if (action === 'increase') {
-        newQuantity++;
-      } else if (action === 'decrease') {
-        newQuantity--;
-      }
-      
-      updateCartItemQuantity(itemId, newQuantity);
-      updateCartDisplay(cartSidebar);
-    });
-  });
-  
-  // Eliminar productos
-  cartSidebar.querySelectorAll('.remove-item').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const itemId = parseFloat(btn.dataset.id);
-      removeFromCart(itemId);
-      updateCartDisplay(cartSidebar);
-    });
-  });
-  
-  // Checkout por WhatsApp
-  const checkoutBtn = cartSidebar.querySelector('.checkout-whatsapp');
-  if (checkoutBtn) {
-    checkoutBtn.addEventListener('click', () => {
-      const orderMessage = createWhatsAppOrderMessage();
-      const whatsappUrl = `https://wa.me/5492604381502?text=${encodeURIComponent(orderMessage)}`;
-      window.open(whatsappUrl, '_blank');
-    });
-  }
-  
-  // Vaciar carrito
-  const clearBtn = cartSidebar.querySelector('.clear-cart');
-  if (clearBtn) {
-    clearBtn.addEventListener('click', () => {
-      if (confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
-        clearCart();
-        updateCartDisplay(cartSidebar);
+    
+    // Click fuera del carrito para cerrar
+    cartSidebar.addEventListener('click', (e) => {
+      if (e.target === cartSidebar) {
+        hideCart();
       }
     });
+    
+    // Controles de cantidad
+    cartSidebar.querySelectorAll('.cart-quantity-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        try {
+          const action = btn.dataset.action;
+          const itemId = parseFloat(btn.dataset.id);
+          const item = cart.find(i => i.id === itemId);
+          
+          if (!item) {
+            console.warn('⚠️ Item no encontrado en el carrito:', itemId);
+            return;
+          }
+          
+          let newQuantity = item.quantity;
+          if (action === 'increase') {
+            newQuantity++;
+          } else if (action === 'decrease') {
+            newQuantity--;
+          }
+          
+          updateCartItemQuantity(itemId, newQuantity);
+          updateCartDisplay(cartSidebar);
+        } catch (error) {
+          console.error('❌ Error al actualizar cantidad:', error);
+          showNotification('Error al actualizar la cantidad', 'error');
+        }
+      });
+    });
+    
+    // Eliminar productos
+    cartSidebar.querySelectorAll('.remove-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        try {
+          const itemId = parseFloat(btn.dataset.id);
+          removeFromCart(itemId);
+          updateCartDisplay(cartSidebar);
+        } catch (error) {
+          console.error('❌ Error al eliminar producto:', error);
+          showNotification('Error al eliminar el producto', 'error');
+        }
+      });
+    });
+    
+    // Checkout por WhatsApp
+    const checkoutBtn = cartSidebar.querySelector('.checkout-whatsapp');
+    if (checkoutBtn) {
+      checkoutBtn.addEventListener('click', () => {
+        try {
+          const orderMessage = createWhatsAppOrderMessage();
+          const whatsappUrl = `https://wa.me/5492604381502?text=${encodeURIComponent(orderMessage)}`;
+          window.open(whatsappUrl, '_blank');
+        } catch (error) {
+          console.error('❌ Error al generar pedido WhatsApp:', error);
+          showNotification('Error al generar el pedido', 'error');
+        }
+      });
+    }
+    
+    // Vaciar carrito
+    const clearBtn = cartSidebar.querySelector('.clear-cart');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        try {
+          if (confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
+            clearCart();
+            updateCartDisplay(cartSidebar);
+          }
+        } catch (error) {
+          console.error('❌ Error al vaciar carrito:', error);
+          showNotification('Error al vaciar el carrito', 'error');
+        }
+      });
+    }
+  } catch (error) {
+    console.error('❌ Error al configurar listeners del carrito:', error);
+    showNotification('Error al configurar el carrito', 'error');
   }
 }
 
