@@ -1,7 +1,11 @@
 /**
  * Módulo de Productos
  * Maneja la carga, filtrado y gestión de datos de productos
+ * Integrado con Firebase para sincronización con POS
  */
+
+import { db } from '../firebase.js';
+import { collection, getDocs } from 'firebase/firestore';
 
 // Variable global para almacenar los productos
 let products = [];
@@ -99,19 +103,71 @@ const categorySubcategories = {
 };
 
 /**
- * Carga los productos desde el archivo JSON
+ * Carga productos desde Firebase Firestore
+ * @returns {Promise<Array>} Array de productos desde Firebase
+ */
+async function loadProductsFromFirebase() {
+  try {
+    console.log('🔥 Intentando cargar productos desde Firebase...');
+    const productsCollection = collection(db, 'products');
+    const querySnapshot = await getDocs(productsCollection);
+    const firebaseProducts = [];
+    
+    querySnapshot.forEach((doc) => {
+      firebaseProducts.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    
+    console.log(`✅ Productos cargados desde Firebase: ${firebaseProducts.length} productos`);
+    return firebaseProducts;
+  } catch (error) {
+    console.error('❌ Error al cargar productos desde Firebase:', error);
+    throw error;
+  }
+}
+
+/**
+ * Carga los productos desde el archivo JSON (fallback)
  * @returns {Promise<Array>} Array de productos
  */
-async function loadProducts() {
+async function loadProductsFromJSON() {
   try {
+    console.log('📄 Cargando productos desde JSON (fallback)...');
     const response = await fetch('../products.json');
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status}`);
     }
     const data = await response.json();
-    products = data;
-    console.log(`✅ Productos cargados exitosamente: ${products.length} productos`);
+    console.log(`✅ Productos cargados desde JSON: ${data.length} productos`);
+    return data;
+  } catch (error) {
+    console.error('❌ Error al cargar productos desde JSON:', error);
+    throw error;
+  }
+}
+
+/**
+ * Carga los productos (Firebase primero, JSON como fallback)
+ * @returns {Promise<Array>} Array de productos
+ */
+async function loadProducts() {
+  try {
+    // Intentar cargar desde Firebase primero
+    try {
+      products = await loadProductsFromFirebase();
+      if (products.length > 0) {
+        return products;
+      }
+    } catch (firebaseError) {
+      console.warn('⚠️ Firebase no disponible, usando fallback a JSON');
+    }
+    
+    // Fallback a JSON si Firebase falla o no hay productos
+    products = await loadProductsFromJSON();
     return products;
+    
   } catch (error) {
     console.error('❌ Error al cargar productos:', error);
     // Mostrar notificación de error al usuario
@@ -130,14 +186,27 @@ async function loadProducts() {
  */
 async function loadProductsFromRoot() {
   try {
+    // Intentar cargar desde Firebase primero
+    try {
+      products = await loadProductsFromFirebase();
+      if (products.length > 0) {
+        return products;
+      }
+    } catch (firebaseError) {
+      console.warn('⚠️ Firebase no disponible, usando fallback a JSON');
+    }
+    
+    // Fallback a JSON si Firebase falla
+    console.log('📄 Cargando productos desde JSON (fallback - root)...');
     const response = await fetch('./products.json');
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status}`);
     }
     const data = await response.json();
     products = data;
-    console.log(`✅ Productos cargados exitosamente: ${products.length} productos`);
+    console.log(`✅ Productos cargados desde JSON: ${products.length} productos`);
     return products;
+    
   } catch (error) {
     console.error('❌ Error al cargar productos:', error);
     if (typeof showNotification === 'function') {
