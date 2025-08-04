@@ -3,22 +3,6 @@
  * Basado en la maqueta visual proporcionada
  */
 
-import { 
-  getProducts, 
-  createProduct, 
-  updateProduct, 
-  deleteProduct,
-  migrateProductsFromJSON 
-} from './firebase-products.js';
-import { 
-  formatCurrency, 
-  formatNumber, 
-  showNotification, 
-  debounce,
-  validateFileSize,
-  validateFileType 
-} from './pos-utils.js';
-
 let currentProducts = [];
 let filteredProducts = [];
 let isEditMode = false;
@@ -27,7 +11,7 @@ let editingProductId = null;
 /**
  * Inicializa la página de productos
  */
-export async function initProductos(container) {
+async function initProductos(container) {
   try {
     // Mostrar loading
     container.innerHTML = `

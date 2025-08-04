@@ -3,17 +3,6 @@
  * Basado en la maqueta visual proporcionada
  */
 
-import { getProducts, getProductBySKU, updateProductStock } from './firebase-products.js';
-import { db } from '../../firebase.js';
-import { collection, addDoc, getDocs, query, orderBy, limit } from 'firebase/firestore';
-import { 
-  formatCurrency, 
-  formatDateTime, 
-  showNotification, 
-  debounce,
-  generateId 
-} from './pos-utils.js';
-
 let currentSaleCart = [];
 let allProducts = [];
 let currentCustomer = null;
@@ -21,7 +10,7 @@ let currentCustomer = null;
 /**
  * Inicializa la página de ventas
  */
-export async function initVentas(container) {
+async function initVentas(container) {
   try {
     // Mostrar loading
     container.innerHTML = `
@@ -579,17 +568,18 @@ async function handleFinishSale() {
     };
 
     // Guardar venta en Firebase
-    const salesCollection = collection(db, 'sales');
-    const docRef = await addDoc(salesCollection, saleData);
-    
-    console.log('✅ Venta guardada con ID:', docRef.id);
+    const db = window.firebaseDB();
+    if (db) {
+      const docRef = await db.collection('sales').add(saleData);
+      console.log('✅ Venta guardada con ID:', docRef.id);
 
-    // Actualizar stock de productos
-    for (const item of currentSaleCart) {
-      const product = allProducts.find(p => p.id === item.productId);
-      if (product) {
-        const newStock = (product.stock || 0) - item.quantity;
-        await updateProductStock(item.productId, Math.max(0, newStock));
+      // Actualizar stock de productos
+      for (const item of currentSaleCart) {
+        const product = allProducts.find(p => p.id === item.productId);
+        if (product) {
+          const newStock = (product.stock || 0) - item.quantity;
+          await updateProductStock(item.productId, Math.max(0, newStock));
+        }
       }
     }
 
@@ -768,12 +758,19 @@ function printReceipt() {
  */
 async function loadRecentSales() {
   try {
-    const salesCollection = collection(db, 'sales');
-    const q = query(salesCollection, orderBy('createdAt', 'desc'), limit(10));
-    const querySnapshot = await getDocs(q);
+    const db = window.firebaseDB();
+    if (!db) {
+      console.warn('Firebase no disponible para cargar ventas');
+      return;
+    }
+
+    const salesSnapshot = await db.collection('sales')
+      .orderBy('createdAt', 'desc')
+      .limit(10)
+      .get();
     
     const sales = [];
-    querySnapshot.forEach((doc) => {
+    salesSnapshot.forEach((doc) => {
       sales.push({
         id: doc.id,
         ...doc.data()
