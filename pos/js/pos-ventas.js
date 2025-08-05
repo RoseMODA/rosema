@@ -948,7 +948,7 @@ function printReceipt() {
 
       <!-- Logo -->
       <div class="text-center mb-2">
-        <img src="https://imgur.com/jflRYCQ" alt="Logo Rosema" class="logo">
+        <img src="https://imgur.com/L6rlw3w" alt="Logo Rosema" class="logo">
       </div>
 
       <!-- Contenido del recibo inyectado dinámicamente -->
