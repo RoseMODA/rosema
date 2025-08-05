@@ -54,226 +54,214 @@ async function initVentas(container) {
  */
 function createVentasHTML() {
   return `
- <!-- Panel de nueva venta -->
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-            <!-- Panel de productos y búsqueda -->
-            <div class="lg:col-span-2">
-              <div class="bg-white rounded-lg shadow p-6">
-          
-                <!-- Búsqueda de productos -->
-                <div class="mb-6">
-                  <label for="product-search" class="block text-sm font-medium text-gray-700 mb-2">
-                    Buscar producto (nombre, SKU o código de barras)
-                  </label>
-          
-                  <div class="flex space-x-2">
-                    <input 
-                      type="text" 
-                      id="product-search" 
-                      placeholder="Escanear código de barras o buscar producto..."
-                      class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-          
-                    <button 
-                      id="btn-scan-barcode" 
-                      class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-                    >
-                      📷 Escanear
-                    </button>
-          
-                    <button 
-                      id="btn-quick-product" 
-                      class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                    >
-                      ➕ Producto Rápido
-                    </button>
-                  </div>
-                </div>
-          
-              </div>
-            </div>
-          
+<!-- Panel de nueva venta -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+  <!-- Panel de productos y búsqueda -->
+  <div class="lg:col-span-2 space-y-6">
+    <div class="bg-white rounded-lg shadow p-6">
+
+      <!-- Búsqueda de productos -->
+      <div class="mb-6">
+        <label for="product-search" class="block text-sm font-medium text-gray-700 mb-2">
+          Buscar producto (nombre, SKU o código de barras)
+        </label>
+        <div class="flex space-x-2">
+          <input 
+            type="text" 
+            id="product-search" 
+            placeholder="Escanear código de barras o buscar producto..."
+            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+          <button 
+            id="btn-scan-barcode" 
+            class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+          >
+            📷 Escanear
+          </button>
+          <button 
+            id="btn-quick-product" 
+            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          >
+            ➕ Producto Rápido
+          </button>
+        </div>
+      </div>
+
+      <!-- Resultados de búsqueda -->
+      <div id="search-results" class="mb-6 hidden">
+        <h4 class="text-sm font-medium text-gray-700 mb-2">Resultados de búsqueda:</h4>
+        <div id="search-results-list" class="space-y-2 max-h-40 overflow-y-auto">
+          <!-- Resultados se mostrarán aquí -->
+        </div>
+      </div>
+
+      <!-- Productos en el carrito de venta -->
+      <div>
+        <h4 class="text-sm font-medium text-gray-700 mb-2">Productos en la venta:</h4>
+        <div id="sale-cart-items" class="space-y-2 min-h-[200px] border border-gray-200 rounded-lg p-4">
+          <div class="text-center text-gray-500 py-8">
+            <span class="text-4xl">🛒</span>
+            <p class="mt-2">No hay productos en la venta</p>
+            <p class="text-sm">Busca y agrega productos para comenzar</p>
           </div>
+        </div>
+      </div>
 
+    </div>
 
-          <!-- Resultados de búsqueda -->
-          <div id="search-results" class="mb-6 hidden">
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Resultados de búsqueda:</h4>
-            <div id="search-results-list" class="space-y-2 max-h-40 overflow-y-auto">
-              <!-- Resultados se mostrarán aquí -->
-            </div>
+    <!-- Aplicar descuento manual -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        Aplicar descuento general
+      </label>
+      <div class="flex space-x-2">
+        <input 
+          type="number" 
+          id="descuento" 
+          placeholder="0.00"
+          min="0"
+          step="0.01"
+          class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+        <select id="discount-type" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <option value="amount">$</option>
+          <option value="percentage">%</option>
+        </select>
+        <button id="btn-descuento" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+          Aplicar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel de resumen y checkout -->
+  <div class="lg:col-span-1">
+    <div class="bg-white rounded-lg shadow p-6 sticky top-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Resumen de Venta</h3>
+      
+      <!-- Información del cliente -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Cliente</label>
+        <input 
+          type="text" 
+          id="customer-name" 
+          placeholder="Nombre del cliente (opcional)"
+          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+        >
+      </div>
+
+      <!-- Resumen de totales -->
+      <div class="border-t border-gray-200 pt-4 mb-6">
+        <div class="space-y-2">
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-600">Subtotal:</span>
+            <span id="sale-subtotal">$0,00</span>
           </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-600">Descuentos:</span>
+            <span id="sale-discount" class="text-green-600">-$0,00</span>
+          </div>
+          <div class="flex justify-between text-lg font-semibold border-t pt-2">
+            <span>Total:</span>
+            <span id="sale-total">$0,00</span>
+          </div>
+          <div class="text-sm text-gray-500">
+            <span id="sale-items-count">0</span> producto(s)
+          </div>
+        </div>
+      </div>
 
-          <!-- Productos en el carrito de venta -->
+      <!-- Método de pago -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Método de pago</label>
+        <select id="payment-method" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+          <option value="efectivo">Efectivo</option>
+          <option value="transferencia">Transferencia</option>
+          <option value="mercadopago">Mercado Pago</option>
+          <option value="tarjeta">Tarjeta Débito</option>
+          <option value="tarjeta">Tarjeta Crédito</option>
+        </select>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="space-y-3">
+        <button id="btn-finish-sale" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>
+          FINALIZAR VENTA
+        </button>
+        <button id="btn-clear-sale" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+          Limpiar Venta
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal para producto rápido -->
+<div id="quick-product-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Agregar Producto Rápido</h3>
+      </div>
+      <form id="quick-product-form" class="px-6 py-4">
+        <div class="space-y-4">
           <div>
-            <h4 class="text-sm font-medium text-gray-700 mb-2">Productos en la venta:</h4>
-            <div id="sale-cart-items" class="space-y-2 min-h-[200px] border border-gray-200 rounded-lg p-4">
-              <div class="text-center text-gray-500 py-8">
-                <span class="text-4xl">🛒</span>
-                <p class="mt-2">No hay productos en la venta</p>
-                <p class="text-sm">Busca y agrega productos para comenzar</p>
-              </div>
-             </div> 
-           </div> 
-           
-          <!-- Aplicar descuento manual -->
-          <div class="mt-4">
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Aplicar descuento general
-            </label>
-            <div class="flex space-x-2">
-              <input 
-                type="number" 
-                id="descuento" 
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-              <select id="discount-type" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <option value="amount">$</option>
-                <option value="percentage">%</option>
-              </select>
-              <button id="btn-descuento" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
-                Aplicar
-              </button>
-            </div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del producto *</label>
+            <input type="text" id="quick-product-name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
           </div>
-
-
-         
-
-      <!-- Panel de resumen y checkout -->
-      <div class="lg:col-span-1">
-        <div class="bg-white rounded-lg shadow p-6 sticky top-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Resumen de Venta</h3>
-          
-          <!-- Información del cliente -->
-          <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Cliente</label>
-            <input 
-              type="text" 
-              id="customer-name" 
-              placeholder="Nombre del cliente (opcional)"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            >
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Talla/Tamaño</label>
+            <input type="text" id="quick-product-size" placeholder="S, M, L, XL, etc." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
           </div>
-
-          <!-- Resumen de totales -->
-          <div class="border-t border-gray-200 pt-4 mb-6">
-            <div class="space-y-2">
-              <div class="flex justify-between text-sm">
-                <span class="text-gray-600">Subtotal:</span>
-                <span id="sale-subtotal">$0,00</span>
-              </div>
-              <div class="flex justify-between text-sm">
-                <span class="text-gray-600">Descuentos:</span>
-                <span id="sale-discount" class="text-green-600">-$0,00</span>
-              </div>
-              <div class="flex justify-between text-lg font-semibold border-t pt-2">
-                <span>Total:</span>
-                <span id="sale-total">$0,00</span>
-              </div>
-              <div class="text-sm text-gray-500">
-                <span id="sale-items-count">0</span> producto(s)
-              </div>
-            </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Precio *</label>
+            <input type="number" id="quick-product-price" required min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
           </div>
-
-          <!-- Método de pago -->
-          <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Método de pago</label>
-            <select id="payment-method" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-              <option value="efectivo">Efectivo</option>
-              <option value="transferencia">Transferencia</option>
-              <option value="mercadopago">Mercado Pago</option>
-              <option value="tarjeta">Tarjeta Debito</option>
-              <option value="tarjeta">Tarjeta Credito</option>                        
-            </select>
-          </div>
-
-          <!-- Botones de acción -->
-          <div class="space-y-3">
-            <button id="btn-finish-sale" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>
-              FINALIZAR VENTA
-            </button>
-            <button id="btn-clear-sale" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
-              Limpiar Venta
-            </button>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
+            <input type="number" id="quick-product-quantity" value="1" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
           </div>
         </div>
-      </div>
-    <!-- Modal para producto rápido -->
-    <div id="quick-product-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
-      <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">Agregar Producto Rápido</h3>
-          </div>
-          
-          <form id="quick-product-form" class="px-6 py-4">
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del producto *</label>
-                <input type="text" id="quick-product-name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Talla/Tamaño</label>
-                <input type="text" id="quick-product-size" placeholder="S, M, L, XL, etc." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Precio *</label>
-                <input type="number" id="quick-product-price" required min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
-                <input type="number" id="quick-product-quantity" value="1" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-              </div>
-            </div>
-          </form>
-          
-          <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-            <button id="cancel-quick-product" type="button" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-              Cancelar
-            </button>
-            <button id="save-quick-product" type="button" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
-              Agregar a la Venta
-            </button>
-          </div>
-        </div>
+      </form>
+      <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+        <button id="cancel-quick-product" type="button" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+          Cancelar
+        </button>
+        <button id="save-quick-product" type="button" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+          Agregar a la Venta
+        </button>
       </div>
     </div>
+  </div>
+</div>
 
-    <!-- Modal de recibo -->
-    <div id="receipt-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
-      <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">Venta Completada</h3>
-          </div>
-          
-          <div id="receipt-content" class="px-6 py-4">
-            <!-- Contenido del recibo se generará aquí -->
-          </div>
-          
-          <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-            <button id="btn-print-receipt" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-              🖨️ Imprimir Recibo
-            </button>
-            <button id="btn-close-receipt" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-              Cerrar
-            </button>
-          </div>
-        </div>
+<!-- Modal de recibo -->
+<div id="receipt-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">Venta Completada</h3>
+      </div>
+      <div id="receipt-content" class="px-6 py-4">
+        <!-- Contenido del recibo se generará aquí -->
+      </div>
+      <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+        <button id="btn-print-receipt" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          🖨️ Imprimir Recibo
+        </button>
+        <button id="btn-close-receipt" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+          Cerrar
+        </button>
       </div>
     </div>
+  </div>
+</div>
 
 
     <!-- Exportar historial -->
+    
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 space-y-4 lg:space-y-0">
       <div class="flex items-center space-x-4">
         <button id="btn-exportar-lista" class="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
