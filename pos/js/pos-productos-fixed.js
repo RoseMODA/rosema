@@ -1,6 +1,6 @@
 /**
  * POS Productos - Gestión completa de productos
- * 
+ * Versión corregida y funcional
  */
 
 let currentProducts = [];
@@ -13,6 +13,8 @@ let editingProductId = null;
  */
 async function initProductos(container) {
   try {
+    console.log('🚀 Iniciando módulo de productos...');
+    
     // Mostrar loading
     container.innerHTML = `
       <div class="flex items-center justify-center py-12">
@@ -25,6 +27,8 @@ async function initProductos(container) {
     currentProducts = await getProducts();
     filteredProducts = [...currentProducts];
     
+    console.log(`📦 ${currentProducts.length} productos cargados`);
+    
     // Renderizar interfaz
     container.innerHTML = createProductosHTML();
     
@@ -33,6 +37,8 @@ async function initProductos(container) {
     
     // Renderizar lista de productos
     renderProductsList();
+    
+    console.log('✅ Módulo de productos iniciado correctamente');
     
   } catch (error) {
     console.error('❌ Error al cargar productos:', error);
@@ -202,6 +208,7 @@ function createProductosHTML() {
                 <label class="block text-sm font-medium text-gray-700 mb-1">Tallas (separadas por coma)</label>
                 <input type="text" id="product-sizes" placeholder="S, M, L, XL" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
               </div>
+              
               <!-- Tags -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Tags (separados por coma)</label>
@@ -302,6 +309,8 @@ function createProductosHTML() {
  * Configura los event listeners
  */
 function setupProductosEvents() {
+  console.log('🔧 Configurando event listeners de productos...');
+  
   // Búsqueda con debounce
   const searchInput = document.getElementById('search-input');
   if (searchInput) {
@@ -332,6 +341,9 @@ function setupProductosEvents() {
     saveBtn.addEventListener('click', handleSaveProduct);
   }
 
+  // Configurar carga de imágenes
+  setupImageUpload();
+
   // Modal de migración
   const cancelMigration = document.getElementById('cancel-migration');
   const confirmMigration = document.getElementById('confirm-migration');
@@ -356,7 +368,138 @@ function setupProductosEvents() {
       closeMigrationModal();
     }
   });
+  
+  console.log('✅ Event listeners configurados');
 }
+
+/**
+ * Configura la carga de imágenes con drag & drop
+ */
+function setupImageUpload() {
+  const imageInput = document.getElementById('product-images');
+  const selectBtn = document.getElementById('select-images-btn');
+  const dropZone = document.getElementById('image-drop-zone');
+
+  if (!imageInput || !selectBtn || !dropZone) return;
+
+  // Event listener para el botón de seleccionar
+  selectBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    imageInput.click();
+  });
+
+  // Event listener para cambio en el input de archivos
+  imageInput.addEventListener('change', handleImageSelection);
+
+  // Configurar drag & drop
+  if (typeof enableDragAndDrop === 'function') {
+    enableDragAndDrop(dropZone, handleImageDrop, ['image/jpeg', 'image/png', 'image/webp']);
+  }
+}
+
+/**
+ * Maneja la selección de imágenes desde el input
+ */
+function handleImageSelection(e) {
+  const files = Array.from(e.target.files);
+  processSelectedImages(files);
+}
+
+/**
+ * Maneja las imágenes soltadas en el drag & drop
+ */
+function handleImageDrop(files) {
+  // Actualizar el input con los archivos
+  const imageInput = document.getElementById('product-images');
+  if (imageInput) {
+    const dt = new DataTransfer();
+    files.forEach(file => dt.items.add(file));
+    imageInput.files = dt.files;
+  }
+  
+  processSelectedImages(files);
+}
+
+/**
+ * Procesa las imágenes seleccionadas y muestra vista previa
+ */
+function processSelectedImages(files) {
+  const previewContainer = document.getElementById('image-preview-container');
+  if (!previewContainer) return;
+
+  // Limpiar vista previa anterior
+  previewContainer.innerHTML = '';
+
+  if (files.length === 0) return;
+
+  // Validar archivos
+  const validFiles = [];
+  for (const file of files) {
+    if (!validateFileType(file, ['image/jpeg', 'image/png', 'image/webp'])) {
+      showNotification(`Formato no válido para ${file.name}. Use JPG, PNG o WebP`, 'error');
+      continue;
+    }
+    
+    if (!validateFileSize(file, 5)) {
+      showNotification(`${file.name} es muy grande. Máximo 5MB por imagen`, 'error');
+      continue;
+    }
+    
+    validFiles.push(file);
+  }
+
+  if (validFiles.length === 0) return;
+
+  // Mostrar vista previa de archivos válidos
+  validFiles.forEach((file, index) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const previewItem = document.createElement('div');
+      previewItem.className = 'relative group';
+      previewItem.innerHTML = `
+        <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200">
+          <img src="${e.target.result}" alt="Vista previa ${index + 1}" class="w-full h-full object-cover">
+        </div>
+        <button type="button" onclick="removeImagePreview(${index})" 
+                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
+          ×
+        </button>
+        <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg truncate">
+          ${file.name}
+        </div>
+      `;
+      previewContainer.appendChild(previewItem);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  showNotification(`${validFiles.length} imagen${validFiles.length > 1 ? 'es' : ''} seleccionada${validFiles.length > 1 ? 's' : ''}`, 'success');
+}
+
+/**
+ * Remueve una imagen de la vista previa
+ */
+window.removeImagePreview = function(index) {
+  const imageInput = document.getElementById('product-images');
+  const previewContainer = document.getElementById('image-preview-container');
+  
+  if (!imageInput || !previewContainer) return;
+
+  // Crear nuevo DataTransfer sin el archivo removido
+  const dt = new DataTransfer();
+  const files = Array.from(imageInput.files);
+  
+  files.forEach((file, i) => {
+    if (i !== index) {
+      dt.items.add(file);
+    }
+  });
+  
+  imageInput.files = dt.files;
+  
+  // Reprocesar imágenes
+  processSelectedImages(Array.from(dt.files));
+};
 
 /**
  * Renderiza la lista de productos en la tabla
@@ -470,6 +613,11 @@ function openProductModal(productData = null) {
   }
   
   modal.classList.remove('hidden');
+  
+  // Configurar eventos de imágenes después de que el modal esté visible
+  setTimeout(() => {
+    setupImageUpload();
+  }, 100);
 }
 
 /**
@@ -481,6 +629,12 @@ function closeProductModal() {
   clearProductForm();
   isEditMode = false;
   editingProductId = null;
+  
+  // Limpiar vista previa de imágenes
+  const previewContainer = document.getElementById('image-preview-container');
+  if (previewContainer) {
+    previewContainer.innerHTML = '';
+  }
 }
 
 /**
@@ -494,228 +648,4 @@ function fillProductForm(product) {
   document.getElementById('product-original-price').value = product.originalPrice || '';
   document.getElementById('product-stock').value = product.stock || '';
   document.getElementById('product-colors').value = (product.colors || []).join(', ');
-  document.getElementById('product-sizes').value = (product.sizes || []).join(', ');
-  document.getElementById('product-tags').value = (product.tags || []).join(', ');
-  document.getElementById('product-description').value = product.description || '';
-  document.getElementById('product-featured').checked = product.featured || false;
-  document.getElementById('product-on-sale').checked = product.onSale || false;
-}
-
-/**
- * Limpia el formulario
- */
-function clearProductForm() {
-  document.getElementById('product-form').reset();
-}
-
-/**
- * Maneja el guardado del producto
- */
-async function handleSaveProduct() {
-  try {
-    const saveBtn = document.getElementById('save-product');
-    const originalText = saveBtn.textContent;
-    saveBtn.disabled = true;
-    saveBtn.textContent = isEditMode ? 'Actualizando...' : 'Guardando...';
-
-    // Recopilar datos del formulario
-    const productData = {
-      name: document.getElementById('product-name').value.trim(),
-      category: document.getElementById('product-category').value,
-      sku: document.getElementById('product-sku').value.trim(),
-      price: document.getElementById('product-price').value,
-      originalPrice: document.getElementById('product-original-price').value,
-      stock: document.getElementById('product-stock').value,
-      colors: document.getElementById('product-colors').value.split(',').map(c => c.trim()).filter(c => c),
-      sizes: document.getElementById('product-sizes').value.split(',').map(s => s.trim()).filter(s => s),
-      tags: document.getElementById('product-tags').value.split(',').map(t => t.trim()).filter(t => t),
-      description: document.getElementById('product-description').value.trim(),
-      featured: document.getElementById('product-featured').checked,
-      onSale: document.getElementById('product-on-sale').checked
-    };
-
-    console.log('📝 Datos del producto a guardar:', productData);
-
-    // Validar datos requeridos
-    if (!productData.name || !productData.category || productData.price === '' || productData.price === undefined) {
-      showNotification('Por favor completa todos los campos requeridos: nombre, categoría y precio', 'error');
-      return;
-    }
-
-    // Validar precio
-    const price = parseFloat(productData.price);
-    if (isNaN(price) || price < 0) {
-      showNotification('El precio debe ser un número válido mayor o igual a 0', 'error');
-      return;
-    }
-
-    // Validar stock
-    const stock = parseInt(productData.stock) || 0;
-    if (isNaN(stock) || stock < 0) {
-      showNotification('El stock debe ser un número válido mayor o igual a 0', 'error');
-      return;
-    }
-
-    // Obtener archivos de imagen
-    const imageFiles = Array.from(document.getElementById('product-images').files);
-    
-    // Validar archivos
-    for (const file of imageFiles) {
-      if (!validateFileType(file)) {
-        showNotification(`Formato de imagen no válido para ${file.name}. Use JPG, PNG o WebP`, 'error');
-        return;
-      }
-      if (!validateFileSize(file)) {
-        showNotification(`El archivo ${file.name} es muy grande. Máximo 5MB por imagen`, 'error');
-        return;
-      }
-    }
-
-    let result;
-    if (isEditMode && editingProductId) {
-      console.log('🔄 Actualizando producto:', editingProductId);
-      result = await updateProduct(editingProductId, productData, imageFiles);
-    } else {
-      console.log('➕ Creando nuevo producto');
-      result = await createProduct(productData, imageFiles);
-    }
-
-    if (result && result.success) {
-      const action = isEditMode ? 'actualizado' : 'creado';
-      showNotification(`Producto ${action} exitosamente`, 'success');
-      
-      closeProductModal();
-      
-      // Recargar productos
-      console.log('🔄 Recargando lista de productos...');
-      currentProducts = await getProducts();
-      filteredProducts = [...currentProducts];
-      renderProductsList();
-      
-      // Actualizar contador
-      const countElement = document.getElementById('products-count');
-      if (countElement) {
-        countElement.textContent = currentProducts.length;
-      }
-    } else {
-      console.error('❌ Error en resultado:', result);
-      showNotification(result?.error || 'Error desconocido al guardar producto', 'error');
-    }
-
-  } catch (error) {
-    console.error('❌ Error al guardar producto:', error);
-    showNotification('Error al guardar el producto', 'error');
-  } finally {
-    const saveBtn = document.getElementById('save-product');
-    saveBtn.disabled = false;
-    saveBtn.textContent = isEditMode ? 'Actualizar Producto' : 'Guardar Producto';
-  }
-}
-
-/**
- * Abre el modal de migración
- */
-function openMigrationModal() {
-  const modal = document.getElementById('migration-modal');
-  modal.classList.remove('hidden');
-}
-
-/**
- * Cierra el modal de migración
- */
-function closeMigrationModal() {
-  const modal = document.getElementById('migration-modal');
-  modal.classList.add('hidden');
-}
-
-/**
- * Maneja la migración de productos
- */
-async function handleMigration() {
-  try {
-    const confirmBtn = document.getElementById('confirm-migration');
-    confirmBtn.disabled = true;
-    confirmBtn.textContent = 'Migrando...';
-
-    const result = await migrateProductsFromJSON();
-    
-    if (result.success) {
-      closeMigrationModal();
-      // Recargar productos
-      currentProducts = await getProducts();
-      filteredProducts = [...currentProducts];
-      renderProductsList();
-    }
-
-  } catch (error) {
-    console.error('❌ Error en migración:', error);
-    showNotification('Error en la migración', 'error');
-  } finally {
-    const confirmBtn = document.getElementById('confirm-migration');
-    confirmBtn.disabled = false;
-    confirmBtn.textContent = 'Migrar Productos';
-  }
-}
-
-// Funciones globales para los botones de la tabla
-window.editProduct = async (productId) => {
-  try {
-    console.log('✏️ Editando producto:', productId);
-    
-    const product = currentProducts.find(p => p.id === productId);
-    if (!product) {
-      showNotification('Producto no encontrado', 'error');
-      return;
-    }
-    
-    console.log('📝 Datos del producto a editar:', product);
-    openProductModal(product);
-    
-  } catch (error) {
-    console.error('❌ Error al editar producto:', error);
-    showNotification('Error al cargar datos del producto', 'error');
-  }
-};
-
-window.deleteProductConfirm = async (productId) => {
-  try {
-    console.log('🗑️ Solicitando eliminar producto:', productId);
-    
-    const product = currentProducts.find(p => p.id === productId);
-    if (!product) {
-      showNotification('Producto no encontrado', 'error');
-      return;
-    }
-
-    const confirmMessage = `¿Estás seguro de que quieres eliminar "${product.name}"?\n\nEsta acción no se puede deshacer.`;
-    
-    if (confirm(confirmMessage)) {
-      console.log('🗑️ Eliminando producto:', productId);
-      
-      const result = await deleteProduct(productId);
-      
-      if (result && result.success) {
-        showNotification('Producto eliminado exitosamente', 'success');
-        
-        // Recargar productos
-        console.log('🔄 Recargando lista de productos...');
-        currentProducts = await getProducts();
-        filteredProducts = [...currentProducts];
-        renderProductsList();
-        
-        // Actualizar contador
-        const countElement = document.getElementById('products-count');
-        if (countElement) {
-          countElement.textContent = currentProducts.length;
-        }
-      } else {
-        console.error('❌ Error en resultado de eliminación:', result);
-        showNotification(result?.error || 'Error al eliminar producto', 'error');
-      }
-    }
-    
-  } catch (error) {
-    console.error('❌ Error al eliminar producto:', error);
-    showNotification('Error al eliminar el producto', 'error');
-  }
-};
+  document.getElementById('product-sizes').value =

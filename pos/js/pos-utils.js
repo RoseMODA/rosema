@@ -326,3 +326,157 @@ function generateChartColors(count) {
   
   return result;
 }
+
+/**
+ * Muestra un modal de confirmación personalizado
+ * @param {string} message - Mensaje a mostrar
+ * @param {function} onConfirm - Función a ejecutar si se confirma
+ * @param {function} [onCancel] - Función a ejecutar si se cancela
+ * @param {string} [title="Confirmación"] - Título del modal
+ * @param {string} [confirmText="Confirmar"] - Texto del botón de confirmación
+ * @param {string} [cancelText="Cancelar"] - Texto del botón de cancelación
+ */
+function showConfirmationModal(message, onConfirm, onCancel, title = "Confirmación", confirmText = "Confirmar", cancelText = "Cancelar") {
+  const modal = document.getElementById('confirmation-modal');
+  const modalContent = document.getElementById('confirmation-modal-content');
+  const modalTitle = document.getElementById('confirmation-modal-title');
+  const modalMessage = document.getElementById('confirmation-modal-message');
+  const cancelBtn = document.getElementById('confirmation-cancel');
+  const confirmBtn = document.getElementById('confirmation-confirm');
+
+  if (!modal || !modalContent || !modalMessage || !cancelBtn || !confirmBtn) {
+    console.error('❌ Modal de confirmación no encontrado en el DOM');
+    return;
+  }
+
+  // Configurar contenido del modal
+  modalTitle.textContent = title;
+  modalMessage.textContent = message;
+  cancelBtn.textContent = cancelText;
+  confirmBtn.textContent = confirmText;
+
+  // Función para cerrar el modal
+  const closeModal = () => {
+    modalContent.classList.remove('scale-100', 'opacity-100');
+    modalContent.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => {
+      modal.classList.add('hidden');
+    }, 200);
+  };
+
+  // Función para manejar cancelación
+  const handleCancel = () => {
+    closeModal();
+    if (onCancel) onCancel();
+  };
+
+  // Función para manejar confirmación
+  const handleConfirm = () => {
+    closeModal();
+    onConfirm();
+  };
+
+  // Remover event listeners previos clonando los botones
+  const newCancelBtn = cancelBtn.cloneNode(true);
+  const newConfirmBtn = confirmBtn.cloneNode(true);
+  cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+  confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+  // Agregar nuevos event listeners
+  newCancelBtn.addEventListener('click', handleCancel);
+  newConfirmBtn.addEventListener('click', handleConfirm);
+
+  // Event listener para cerrar con Escape
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      handleCancel();
+      document.removeEventListener('keydown', handleKeyDown);
+    }
+  };
+
+  // Event listener para cerrar al hacer clic fuera del modal
+  const handleClickOutside = (e) => {
+    if (e.target === modal) {
+      handleCancel();
+      modal.removeEventListener('click', handleClickOutside);
+    }
+  };
+
+  // Agregar event listeners
+  document.addEventListener('keydown', handleKeyDown);
+  modal.addEventListener('click', handleClickOutside);
+
+  // Mostrar modal con animación
+  modal.classList.remove('hidden');
+  setTimeout(() => {
+    modalContent.classList.remove('scale-95', 'opacity-0');
+    modalContent.classList.add('scale-100', 'opacity-100');
+  }, 10);
+
+  // Enfocar el botón de cancelar por defecto
+  setTimeout(() => {
+    newCancelBtn.focus();
+  }, 250);
+}
+
+/**
+ * Crea un elemento de arrastrar y soltar para archivos
+ * @param {HTMLElement} element - Elemento al que agregar funcionalidad drag & drop
+ * @param {function} onFilesDropped - Callback cuando se sueltan archivos
+ * @param {string[]} [acceptedTypes] - Tipos de archivo aceptados
+ */
+function enableDragAndDrop(element, onFilesDropped, acceptedTypes = ['image/*']) {
+  if (!element) return;
+
+  // Prevenir comportamiento por defecto
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    element.addEventListener(eventName, preventDefaults, false);
+    document.body.addEventListener(eventName, preventDefaults, false);
+  });
+
+  // Resaltar área de drop
+  ['dragenter', 'dragover'].forEach(eventName => {
+    element.addEventListener(eventName, highlight, false);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    element.addEventListener(eventName, unhighlight, false);
+  });
+
+  // Manejar archivos soltados
+  element.addEventListener('drop', handleDrop, false);
+
+  function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  function highlight() {
+    element.classList.add('border-blue-500', 'bg-blue-50');
+  }
+
+  function unhighlight() {
+    element.classList.remove('border-blue-500', 'bg-blue-50');
+  }
+
+  function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const files = Array.from(dt.files);
+    
+    // Filtrar archivos por tipo si se especifica
+    const validFiles = files.filter(file => {
+      return acceptedTypes.some(type => {
+        if (type.endsWith('/*')) {
+          return file.type.startsWith(type.slice(0, -1));
+        }
+        return file.type === type;
+      });
+    });
+
+    if (validFiles.length > 0) {
+      onFilesDropped(validFiles);
+    } else {
+      showNotification('Tipo de archivo no válido', 'error');
+    }
+  }
+}
