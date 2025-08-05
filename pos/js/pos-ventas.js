@@ -822,7 +822,7 @@ function createReceiptHTML(saleData) {
   return `
     <div class="text-center mb-4">
       <div class="flex items-center justify-center mb-2">
-        <img src="/assets/icons/rosemalogysub.png" alt="Logo" style="max-height: 140px;" class="mx-auto">
+        <img src="/pos/js/rosemalogysub.png" alt="Logo" style="max-height: 140px;" class="mx-auto">
       </div>
       <p class="text-sm text-gray-600">Salto de las Rosas, Mendoza AR</p>
       <p class="text-sm text-gray-600">Tel: +54 9 260 4381502</p>
@@ -948,8 +948,9 @@ function printReceipt() {
 
       <!-- Logo -->
       <div class="text-center mb-2">
-        <img src="https://imgur.com/L6rlw3w" alt="Logo Rosema" class="logo">
+        <img src="/pos/js/rosemalogysub.png" alt="Logo" style="max-height: 140px;" class="mx-auto">
       </div>
+      
 
       <!-- Contenido del recibo inyectado dinámicamente -->
       ${receiptContent}
