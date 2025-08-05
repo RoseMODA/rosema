@@ -239,24 +239,7 @@ function createEstadisticasHTML(stats) {
         </div>
       </div>
 
-      <!-- Total Leads -->
-      <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-gray-600">Clientes potenciales</p>
-            <p class="text-2xl font-bold text-gray-900">${formatCurrency(stats.totalLeads)}</p>
-            <div class="flex items-center mt-2">
-              <span class="text-xs ${stats.leadsChange >= 0 ? 'text-green-600' : 'text-red-600'}">
-                ${stats.leadsChange >= 0 ? '+' : ''}${stats.leadsChange.toFixed(1)}%
-              </span>
-              <span class="text-xs text-gray-500 ml-2">Del último mes</span>
-            </div>
-          </div>
-          <div class="text-gray-400">
-            <span class="text-2xl">👥</span>
-          </div>
-        </div>
-      </div>
+
     </div>
 
     <!-- Gráficos y métricas secundarias -->

@@ -261,7 +261,7 @@ function createVentasHTML() {
 
 
     <!-- Exportar historial -->
-    
+
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 space-y-4 lg:space-y-0">
       <div class="flex items-center space-x-4">
         <button id="btn-exportar-lista" class="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
@@ -821,10 +821,13 @@ function closeReceiptModal() {
 function createReceiptHTML(saleData) {
   return `
     <div class="text-center mb-4">
-      <h2 class="text-xl font-bold">ROSEMA MODA FAMILIAR</h2>
+      <div class="flex items-center justify-center mb-2">
+        <img src="/assets/icons/rosemalogysub.png" alt="Logo" style="max-height: 140px;" class="mx-auto">
+      </div>
       <p class="text-sm text-gray-600">Salto de las Rosas, Mendoza AR</p>
       <p class="text-sm text-gray-600">Tel: +54 9 260 4381502</p>
     </div>
+
     
     <div class="border-t border-b border-gray-300 py-2 mb-4">
       <div class="flex justify-between text-sm">
@@ -851,7 +854,17 @@ function createReceiptHTML(saleData) {
     </div>
     
     <div class="border-t border-gray-300 pt-2">
-      <div class="flex justify-between font-semibold">
+      <div class="flex justify-between text-sm">
+        <span>Subtotal:</span>
+        <span>${formatCurrency(saleData.subtotal)}</span>
+      </div>
+      ${saleData.discount > 0 ? `
+        <div class="flex justify-between text-sm text-green-600">
+          <span>Descuento:</span>
+          <span>- ${formatCurrency(saleData.discount)}</span>
+        </div>
+      ` : ''}
+      <div class="flex justify-between font-semibold border-t mt-2 pt-2">
         <span>TOTAL:</span>
         <span>${formatCurrency(saleData.total)}</span>
       </div>
@@ -859,6 +872,8 @@ function createReceiptHTML(saleData) {
         Pago: ${saleData.paymentMethod.charAt(0).toUpperCase() + saleData.paymentMethod.slice(1)}
       </div>
     </div>
+
+
     
     <div class="text-center mt-4 text-xs text-gray-500">
       <p>¡Gracias por su compra!</p>
@@ -876,9 +891,12 @@ function printReceipt() {
   const printWindow = window.open('', '_blank');
   printWindow.document.write(`
     <!DOCTYPE html>
-    <html>
+    <html lang="es">
     <head>
+      <meta charset="UTF-8">
       <title>Recibo de Venta - Rosema</title>
+
+      <!-- Estilos generales -->
       <style>
         body { 
           font-family: Arial, sans-serif; 
@@ -906,12 +924,39 @@ function printReceipt() {
         .justify-between { justify-content: space-between; }
         .flex-1 { flex: 1; }
         .text-right { text-align: right; }
+        img.logo {
+          max-height: 60px;
+          width: auto;
+          display: block;
+          margin: 0 auto 8px;
+        }
+      </style>
+
+      <!-- Estilos específicos para impresión -->
+      <style>
+        @media print {
+          body {
+            margin: 0;
+            padding: 0;
+            max-width: none;
+          }
+        }
       </style>
     </head>
+
     <body>
+
+      <!-- Logo -->
+      <div class="text-center mb-2">
+        <img src="https://imgur.com/jflRYCQ" alt="Logo Rosema" class="logo">
+      </div>
+
+      <!-- Contenido del recibo inyectado dinámicamente -->
       ${receiptContent}
+
     </body>
     </html>
+
   `);
   
   printWindow.document.close();

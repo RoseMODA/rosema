@@ -1,6 +1,6 @@
 /**
  * POS Productos - Gestión completa de productos
- * Basado en la maqueta visual proporcionada
+ * 
  */
 
 let currentProducts = [];
