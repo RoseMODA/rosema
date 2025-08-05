@@ -6,6 +6,7 @@
 let currentSaleCart = [];
 let allProducts = [];
 let currentCustomer = null;
+let currentDiscount = 0;
 
 /**
  * Inicializa la página de ventas
@@ -95,25 +96,29 @@ function createVentasHTML() {
                 <p class="mt-2">No hay productos en la venta</p>
                 <p class="text-sm">Busca y agrega productos para comenzar</p>
               </div>
-            </div>
-
           <!-- Aplicar descuento manual -->
-          <div>
-                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Aplicar descuento general
-                 </label>
-                  <div class="flex space-x-2">
-                        <input 
-                          type="text" 
-                          id="descuento" 
-                          placeholder=""
-                          class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                        <button id="btn-descuento" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
-                          Aplicar
-                        </button>
-                    </div>
-           </div>
+          <div class="mt-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Aplicar descuento general
+            </label>
+            <div class="flex space-x-2">
+              <input 
+                type="number" 
+                id="descuento" 
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+              <select id="discount-type" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="amount">$</option>
+                <option value="percentage">%</option>
+              </select>
+              <button id="btn-descuento" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                Aplicar
+              </button>
+            </div>
+          </div>
 
 
           </div>
@@ -319,6 +324,12 @@ function setupVentasEvents() {
     btnClearSale.addEventListener('click', handleClearSale);
   }
 
+  // Botón aplicar descuento
+  const btnDescuento = document.getElementById('btn-descuento');
+  if (btnDescuento) {
+    btnDescuento.addEventListener('click', handleApplyDiscount);
+  }
+
   // Modal de recibo
   const btnCloseReceipt = document.getElementById('btn-close-receipt');
   const btnPrintReceipt = document.getElementById('btn-print-receipt');
@@ -329,6 +340,12 @@ function setupVentasEvents() {
   
   if (btnPrintReceipt) {
     btnPrintReceipt.addEventListener('click', printReceipt);
+  }
+
+  // Botón exportar lista
+  const btnExportarLista = document.getElementById('btn-exportar-lista');
+  if (btnExportarLista) {
+    btnExportarLista.addEventListener('click', handleExportSales);
   }
 
   // Cerrar modal al hacer click fuera
@@ -540,13 +557,12 @@ function removeSaleItem(itemId) {
  */
 function updateSaleTotals() {
   const subtotal = currentSaleCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const discount = 0; // Por ahora sin descuentos
-  const total = subtotal - discount;
+  const total = subtotal - currentDiscount;
   const itemsCount = currentSaleCart.reduce((sum, item) => sum + item.quantity, 0);
 
   document.getElementById('sale-subtotal').textContent = formatCurrency(subtotal);
-  document.getElementById('sale-discount').textContent = formatCurrency(discount);
-  document.getElementById('sale-total').textContent = formatCurrency(total);
+  document.getElementById('sale-discount').textContent = formatCurrency(currentDiscount);
+  document.getElementById('sale-total').textContent = formatCurrency(Math.max(0, total));
   document.getElementById('sale-items-count').textContent = itemsCount;
 
   // Habilitar/deshabilitar botón de finalizar venta
@@ -581,8 +597,8 @@ async function handleFinishSale() {
         subtotal: item.price * item.quantity
       })),
       subtotal: currentSaleCart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-      discount: 0,
-      total: currentSaleCart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+      discount: currentDiscount,
+      total: Math.max(0, currentSaleCart.reduce((sum, item) => sum + (item.price * item.quantity), 0) - currentDiscount),
       paymentMethod: document.getElementById('payment-method').value,
       createdAt: new Date().toISOString(),
       status: 'completed'
@@ -628,10 +644,52 @@ async function handleFinishSale() {
 function handleClearSale() {
   currentSaleCart = [];
   currentCustomer = null;
+  currentDiscount = 0;
   document.getElementById('customer-name').value = '';
   document.getElementById('payment-method').value = 'efectivo';
+  document.getElementById('descuento').value = '';
+  document.getElementById('discount-type').value = 'amount';
   renderSaleCart();
   updateSaleTotals();
+}
+
+/**
+ * Maneja la aplicación de descuentos
+ */
+function handleApplyDiscount() {
+  try {
+    const discountInput = document.getElementById('descuento');
+    const discountType = document.getElementById('discount-type');
+    const discountValue = parseFloat(discountInput.value) || 0;
+    
+    if (discountValue < 0) {
+      showNotification('El descuento no puede ser negativo', 'error');
+      return;
+    }
+
+    const subtotal = currentSaleCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    if (discountType.value === 'percentage') {
+      if (discountValue > 100) {
+        showNotification('El descuento no puede ser mayor al 100%', 'error');
+        return;
+      }
+      currentDiscount = (subtotal * discountValue) / 100;
+    } else {
+      if (discountValue > subtotal) {
+        showNotification('El descuento no puede ser mayor al subtotal', 'error');
+        return;
+      }
+      currentDiscount = discountValue;
+    }
+
+    updateSaleTotals();
+    showNotification(`Descuento de ${formatCurrency(currentDiscount)} aplicado`, 'success');
+    
+  } catch (error) {
+    console.error('❌ Error al aplicar descuento:', error);
+    showNotification('Error al aplicar descuento', 'error');
+  }
 }
 
 /**
@@ -885,3 +943,65 @@ window.printSaleReceipt = (saleId) => {
   // TODO: Implementar reimpresión de recibo
   showNotification('Funcionalidad en desarrollo', 'info');
 };
+
+/**
+ * Maneja la exportación de ventas
+ */
+async function handleExportSales() {
+  try {
+    showNotification('Exportando ventas...', 'info');
+    
+    const db = window.firebaseDB();
+    if (!db) {
+      showNotification('Firebase no disponible para exportar', 'error');
+      return;
+    }
+
+    const salesSnapshot = await db.collection('sales')
+      .orderBy('createdAt', 'desc')
+      .get();
+    
+    const sales = [];
+    salesSnapshot.forEach((doc) => {
+      const saleData = doc.data();
+      sales.push({
+        'Número de Venta': saleData.saleNumber,
+        'Fecha': formatDateTime(saleData.createdAt),
+        'Cliente': saleData.customerName,
+        'Total': saleData.total,
+        'Descuento': saleData.discount || 0,
+        'Subtotal': saleData.subtotal,
+        'Método de Pago': saleData.paymentMethod,
+        'Productos': saleData.items.length,
+        'Estado': saleData.status
+      });
+    });
+
+    if (sales.length === 0) {
+      showNotification('No hay ventas para exportar', 'warning');
+      return;
+    }
+
+    // Convertir a CSV
+    const headers = Object.keys(sales[0]);
+    const csvContent = [
+      headers.join(','),
+      ...sales.map(sale => 
+        headers.map(header => {
+          const value = sale[header];
+          return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
+        }).join(',')
+      )
+    ].join('\n');
+
+    // Descargar archivo
+    const fileName = `ventas_${new Date().toISOString().split('T')[0]}.csv`;
+    downloadFile(csvContent, fileName, 'text/csv');
+    
+    showNotification(`${sales.length} ventas exportadas exitosamente`, 'success');
+
+  } catch (error) {
+    console.error('❌ Error al exportar ventas:', error);
+    showNotification('Error al exportar ventas', 'error');
+  }
+}

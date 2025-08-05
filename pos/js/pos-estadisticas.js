@@ -3,22 +3,10 @@
  * Basado en la maqueta visual proporcionada
  */
 
-import { getProducts } from './firebase-products.js';
-import { db } from '../../firebase.js';
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
-import { 
-  formatCurrency, 
-  formatNumber, 
-  formatDate,
-  calculatePercentageChange,
-  generateChartColors,
-  showNotification 
-} from './pos-utils.js';
-
 /**
  * Inicializa la página de estadísticas
  */
-export async function initEstadisticas(container) {
+async function initEstadisticas(container) {
   try {
     // Mostrar loading
     container.innerHTML = `
@@ -64,11 +52,18 @@ export async function initEstadisticas(container) {
  */
 async function getSales() {
   try {
-    const salesCollection = collection(db, 'sales');
-    const querySnapshot = await getDocs(salesCollection);
-    const sales = [];
+    const db = window.firebaseDB();
+    if (!db) {
+      console.warn('Firebase no disponible para cargar ventas');
+      return [];
+    }
+
+    const salesSnapshot = await db.collection('sales')
+      .orderBy('createdAt', 'desc')
+      .get();
     
-    querySnapshot.forEach((doc) => {
+    const sales = [];
+    salesSnapshot.forEach((doc) => {
       sales.push({
         id: doc.id,
         ...doc.data()
@@ -191,13 +186,13 @@ function createEstadisticasHTML(stats) {
       <div class="bg-[#d63629] text-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium text-red-100">Total Revenue</p>
+            <p class="text-sm font-medium text-red-100">Ingresos Totales</p>
             <p class="text-2xl font-bold">${formatCurrency(stats.totalRevenue)}</p>
             <div class="flex items-center mt-2">
               <span class="text-xs ${stats.revenueChange >= 0 ? 'text-green-200' : 'text-red-200'}">
                 ${stats.revenueChange >= 0 ? '+' : ''}${stats.revenueChange.toFixed(1)}%
               </span>
-              <span class="text-xs text-red-100 ml-2">From Last Month</span>
+              <span class="text-xs text-red-100 ml-2">Del último mes</span>
             </div>
           </div>
           <div class="text-red-100">
@@ -210,13 +205,13 @@ function createEstadisticasHTML(stats) {
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium text-gray-600">Total Profit</p>
+            <p class="text-sm font-medium text-gray-600">Total ganado</p>
             <p class="text-2xl font-bold text-gray-900">${formatCurrency(stats.totalProfit)}</p>
             <div class="flex items-center mt-2">
               <span class="text-xs ${stats.profitChange >= 0 ? 'text-green-600' : 'text-red-600'}">
                 ${stats.profitChange >= 0 ? '+' : ''}${stats.profitChange.toFixed(1)}%
               </span>
-              <span class="text-xs text-gray-500 ml-2">From Last Month</span>
+              <span class="text-xs text-gray-500 ml-2">Del último mes</span>
             </div>
           </div>
           <div class="text-gray-400">
@@ -229,13 +224,13 @@ function createEstadisticasHTML(stats) {
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium text-gray-600">Total Cost</p>
+            <p class="text-sm font-medium text-gray-600">Costo total</p>
             <p class="text-2xl font-bold text-gray-900">${formatCurrency(stats.totalCost)}</p>
             <div class="flex items-center mt-2">
               <span class="text-xs ${stats.costChange <= 0 ? 'text-green-600' : 'text-red-600'}">
                 ${stats.costChange >= 0 ? '+' : ''}${stats.costChange.toFixed(1)}%
               </span>
-              <span class="text-xs text-gray-500 ml-2">From Last Month</span>
+              <span class="text-xs text-gray-500 ml-2">Del último mes</span>
             </div>
           </div>
           <div class="text-gray-400">
@@ -248,13 +243,13 @@ function createEstadisticasHTML(stats) {
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium text-gray-600">Total Leads</p>
+            <p class="text-sm font-medium text-gray-600">Clientes potenciales</p>
             <p class="text-2xl font-bold text-gray-900">${formatCurrency(stats.totalLeads)}</p>
             <div class="flex items-center mt-2">
               <span class="text-xs ${stats.leadsChange >= 0 ? 'text-green-600' : 'text-red-600'}">
                 ${stats.leadsChange >= 0 ? '+' : ''}${stats.leadsChange.toFixed(1)}%
               </span>
-              <span class="text-xs text-gray-500 ml-2">From Last Month</span>
+              <span class="text-xs text-gray-500 ml-2">Del último mes</span>
             </div>
           </div>
           <div class="text-gray-400">
@@ -269,10 +264,10 @@ function createEstadisticasHTML(stats) {
       <!-- Total Sales -->
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">Total Sales</h3>
+          <h3 class="text-lg font-semibold text-gray-900">Ventas totales</h3>
           <div class="flex items-center space-x-2">
-            <span class="text-sm text-gray-500">Current</span>
-            <span class="text-sm text-gray-500">Last Month</span>
+            <span class="text-sm text-gray-500">Actual</span>
+            <span class="text-sm text-gray-500">Mes pasado</span>
           </div>
         </div>
         <div class="text-3xl font-bold text-gray-900 mb-2">${formatCurrency(stats.totalSales)}</div>
@@ -284,10 +279,10 @@ function createEstadisticasHTML(stats) {
       <!-- Total Visitors -->
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">Total Visitors</h3>
+          <h3 class="text-lg font-semibold text-gray-900">Visitantes totales</h3>
           <div class="flex items-center space-x-2">
-            <span class="text-sm text-gray-500">Current</span>
-            <span class="text-sm text-gray-500">Last Month</span>
+            <span class="text-sm text-gray-500">Actual</span>
+            <span class="text-sm text-gray-500">Mes pasado</span>
           </div>
         </div>
         <div class="text-3xl font-bold text-gray-900 mb-2">${formatNumber(stats.totalVisitors)}</div>
@@ -299,10 +294,10 @@ function createEstadisticasHTML(stats) {
       <!-- Earning Growth -->
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">Earning Growth</h3>
+          <h3 class="text-lg font-semibold text-gray-900">Crecimiento de ganancias</h3>
           <div class="flex items-center space-x-2">
-            <span class="text-sm text-gray-500">Current</span>
-            <span class="text-sm text-gray-500">Last Week</span>
+            <span class="text-sm text-gray-500">Actual</span>
+            <span class="text-sm text-gray-500">Semana pasada</span>
           </div>
         </div>
         <div class="text-3xl font-bold text-gray-900 mb-2">${formatCurrency(stats.earningGrowth)}</div>
@@ -317,8 +312,8 @@ function createEstadisticasHTML(stats) {
       <!-- Recent Transactions -->
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">Recent Transaction</h3>
-          <button class="text-red-600 text-sm hover:underline">See All Transaction</button>
+          <h3 class="text-lg font-semibold text-gray-900">Transacciones recientes</h3>
+          <button class="text-red-600 text-sm hover:underline">Ver todas las transacciones</button>
         </div>
         <div class="space-y-4">
           ${stats.recentTransactions.length > 0 ? 
@@ -356,8 +351,8 @@ function createEstadisticasHTML(stats) {
       <!-- Top Selling Products -->
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">Top Selling Product</h3>
-          <button class="text-red-600 text-sm hover:underline">See All Product</button>
+          <h3 class="text-lg font-semibold text-gray-900">Producto más vendido</h3>
+          <button class="text-red-600 text-sm hover:underline">Ver todos los productos</button>
         </div>
         <div class="space-y-4">
           ${stats.topSellingProducts.length > 0 ? 
@@ -368,13 +363,13 @@ function createEstadisticasHTML(stats) {
                 </div>
                 <div class="flex-1">
                   <p class="font-medium text-gray-900">${product.name}</p>
-                  <p class="text-sm text-gray-500">${product.totalQuantity} stocks remaining</p>
+                  <p class="text-sm text-gray-500">${product.totalQuantity} unidades restantes</p>
                 </div>
                 <div class="text-right">
                   <p class="font-semibold text-gray-900">${formatCurrency(product.revenue)}</p>
-                  <p class="text-sm text-gray-500">Total Sales: ${formatCurrency(product.totalSales)}</p>
+                  <p class="text-sm text-gray-500">Ventas totales: ${formatCurrency(product.totalSales)}</p>
                   <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                    Available
+                    Disponible
                   </span>
                 </div>
               </div>
@@ -389,6 +384,7 @@ function createEstadisticasHTML(stats) {
     </div>
   `;
 }
+
 
 /**
  * Configura los event listeners

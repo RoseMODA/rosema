@@ -194,24 +194,32 @@ async function loadProductos() {
  * Carga la página de proveedores
  */
 async function loadProveedores() {
-  mainContent.innerHTML = `
-    <div class="text-center py-12">
-      <h3 class="text-xl font-semibold text-gray-600 mb-2">Proveedores</h3>
-      <p class="text-gray-500">Funcionalidad en desarrollo</p>
-    </div>
-  `;
+  if (typeof initProveedores === 'function') {
+    await initProveedores(mainContent);
+  } else {
+    mainContent.innerHTML = `
+      <div class="text-center py-12">
+        <h3 class="text-xl font-semibold text-gray-600 mb-2">Proveedores</h3>
+        <p class="text-gray-500">Funcionalidad en desarrollo</p>
+      </div>
+    `;
+  }
 }
 
 /**
  * Carga la página de facturas ARCA
  */
 async function loadFacturas() {
-  mainContent.innerHTML = `
-    <div class="text-center py-12">
-      <h3 class="text-xl font-semibold text-gray-600 mb-2">Facturas ARCA</h3>
-      <p class="text-gray-500">Funcionalidad en desarrollo</p>
-    </div>
-  `;
+  if (typeof initFacturas === 'function') {
+    await initFacturas(mainContent);
+  } else {
+    mainContent.innerHTML = `
+      <div class="text-center py-12">
+        <h3 class="text-xl font-semibold text-gray-600 mb-2">Facturas ARCA</h3>
+        <p class="text-gray-500">Funcionalidad en desarrollo</p>
+      </div>
+    `;
+  }
 }
 
 /**
