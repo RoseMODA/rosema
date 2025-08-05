@@ -498,8 +498,9 @@ function clearProductForm() {
 async function handleSaveProduct() {
   try {
     const saveBtn = document.getElementById('save-product');
+    const originalText = saveBtn.textContent;
     saveBtn.disabled = true;
-    saveBtn.textContent = 'Guardando...';
+    saveBtn.textContent = isEditMode ? 'Actualizando...' : 'Guardando...';
 
     // Recopilar datos del formulario
     const productData = {
@@ -517,6 +518,8 @@ async function handleSaveProduct() {
       onSale: document.getElementById('product-on-sale').checked
     };
 
+    console.log('📝 Datos del producto a guardar:', productData);
+
     // Validar datos requeridos
     if (!productData.name || !productData.category || productData.price === '' || productData.price === undefined) {
       showNotification('Por favor completa todos los campos requeridos: nombre, categoría y precio', 'error');
@@ -531,7 +534,7 @@ async function handleSaveProduct() {
     }
 
     // Validar stock
-    const stock = parseInt(productData.stock);
+    const stock = parseInt(productData.stock) || 0;
     if (isNaN(stock) || stock < 0) {
       showNotification('El stock debe ser un número válido mayor o igual a 0', 'error');
       return;
@@ -553,19 +556,34 @@ async function handleSaveProduct() {
     }
 
     let result;
-    if (isEditMode) {
+    if (isEditMode && editingProductId) {
+      console.log('🔄 Actualizando producto:', editingProductId);
       result = await updateProduct(editingProductId, productData, imageFiles);
     } else {
+      console.log('➕ Creando nuevo producto');
       result = await createProduct(productData, imageFiles);
     }
 
-    if (result.success) {
+    if (result && result.success) {
+      const action = isEditMode ? 'actualizado' : 'creado';
+      showNotification(`Producto ${action} exitosamente`, 'success');
+      
       closeProductModal();
+      
       // Recargar productos
-      showNotification('Recargando lista de productos...', 'info', 2000);
+      console.log('🔄 Recargando lista de productos...');
       currentProducts = await getProducts();
       filteredProducts = [...currentProducts];
       renderProductsList();
+      
+      // Actualizar contador
+      const countElement = document.getElementById('products-count');
+      if (countElement) {
+        countElement.textContent = currentProducts.length;
+      }
+    } else {
+      console.error('❌ Error en resultado:', result);
+      showNotification(result?.error || 'Error desconocido al guardar producto', 'error');
     }
 
   } catch (error) {
@@ -625,23 +643,63 @@ async function handleMigration() {
 
 // Funciones globales para los botones de la tabla
 window.editProduct = async (productId) => {
-  const product = currentProducts.find(p => p.id === productId);
-  if (product) {
+  try {
+    console.log('✏️ Editando producto:', productId);
+    
+    const product = currentProducts.find(p => p.id === productId);
+    if (!product) {
+      showNotification('Producto no encontrado', 'error');
+      return;
+    }
+    
+    console.log('📝 Datos del producto a editar:', product);
     openProductModal(product);
+    
+  } catch (error) {
+    console.error('❌ Error al editar producto:', error);
+    showNotification('Error al cargar datos del producto', 'error');
   }
 };
 
 window.deleteProductConfirm = async (productId) => {
-  const product = currentProducts.find(p => p.id === productId);
-  if (!product) return;
-
-  if (confirm(`¿Estás seguro de que quieres eliminar "${product.name}"?`)) {
-    const result = await deleteProduct(productId);
-    if (result.success) {
-      // Recargar productos
-      currentProducts = await getProducts();
-      filteredProducts = [...currentProducts];
-      renderProductsList();
+  try {
+    console.log('🗑️ Solicitando eliminar producto:', productId);
+    
+    const product = currentProducts.find(p => p.id === productId);
+    if (!product) {
+      showNotification('Producto no encontrado', 'error');
+      return;
     }
+
+    const confirmMessage = `¿Estás seguro de que quieres eliminar "${product.name}"?\n\nEsta acción no se puede deshacer.`;
+    
+    if (confirm(confirmMessage)) {
+      console.log('🗑️ Eliminando producto:', productId);
+      
+      const result = await deleteProduct(productId);
+      
+      if (result && result.success) {
+        showNotification('Producto eliminado exitosamente', 'success');
+        
+        // Recargar productos
+        console.log('🔄 Recargando lista de productos...');
+        currentProducts = await getProducts();
+        filteredProducts = [...currentProducts];
+        renderProductsList();
+        
+        // Actualizar contador
+        const countElement = document.getElementById('products-count');
+        if (countElement) {
+          countElement.textContent = currentProducts.length;
+        }
+      } else {
+        console.error('❌ Error en resultado de eliminación:', result);
+        showNotification(result?.error || 'Error al eliminar producto', 'error');
+      }
+    }
+    
+  } catch (error) {
+    console.error('❌ Error al eliminar producto:', error);
+    showNotification('Error al eliminar el producto', 'error');
   }
 };

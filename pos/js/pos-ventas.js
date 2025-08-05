@@ -469,14 +469,25 @@ function handleBarcodeInput(e) {
     const searchTerm = e.target.value.trim();
     
     if (searchTerm) {
-      // Buscar producto por SKU exacto
-      const product = allProducts.find(p => p.sku === searchTerm);
+      // Buscar producto por SKU exacto o nombre
+      let product = allProducts.find(p => p.sku === searchTerm);
+      
+      // Si no se encuentra por SKU, buscar por nombre exacto
+      if (!product) {
+        product = allProducts.find(p => p.name.toLowerCase() === searchTerm.toLowerCase());
+      }
+      
+      // Si no se encuentra, buscar por nombre parcial
+      if (!product) {
+        product = allProducts.find(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      }
+      
       if (product) {
         addProductToSale(product.id);
         e.target.value = '';
         document.getElementById('search-results').classList.add('hidden');
       } else {
-        showNotification('Producto no encontrado', 'warning');
+        showNotification(`No se encontró producto con: "${searchTerm}"`, 'warning');
       }
     }
   }
@@ -489,12 +500,18 @@ function addProductToSale(productId) {
   try {
     console.log('🛒 Agregando producto a la venta:', productId);
     
-    const product = allProducts.find(p => p.id === productId);
+    // Asegurar que productId sea string para comparación consistente
+    const searchId = String(productId);
+    const product = allProducts.find(p => String(p.id) === searchId);
+    
     if (!product) {
-      showNotification('Producto no encontrado', 'error');
       console.error('❌ Producto no encontrado:', productId);
+      console.log('📋 Productos disponibles:', allProducts.map(p => ({ id: p.id, name: p.name })));
+      showNotification('Producto no encontrado en el inventario', 'error');
       return;
     }
+
+    console.log('✅ Producto encontrado:', product.name);
 
     if ((product.stock || 0) <= 0) {
       showNotification(`${product.name} sin stock disponible`, 'warning');
@@ -502,7 +519,7 @@ function addProductToSale(productId) {
     }
 
     // Verificar si ya está en el carrito
-    const existingItem = currentSaleCart.find(item => item.productId === productId);
+    const existingItem = currentSaleCart.find(item => String(item.productId) === searchId);
     
     if (existingItem) {
       if (existingItem.quantity >= product.stock) {
@@ -514,7 +531,7 @@ function addProductToSale(productId) {
     } else {
       const newItem = {
         id: generateId(),
-        productId: productId,
+        productId: searchId,
         name: product.name,
         price: product.price || 0,
         originalPrice: product.originalPrice,
@@ -1055,11 +1072,14 @@ function renderSalesTable(sales) {
         </span>
       </td>
       <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-        <button onclick="viewSaleDetails('${sale.id}')" class="text-blue-600 hover:text-blue-900 mr-3">
+        <button onclick="viewSaleDetails('${sale.id}')" class="text-blue-600 hover:text-blue-900 mr-3" title="Ver detalles de la venta">
           Ver
         </button>
-        <button onclick="printSaleReceipt('${sale.id}')" class="text-green-600 hover:text-green-900">
+        <button onclick="printSaleReceipt('${sale.id}')" class="text-green-600 hover:text-green-900 mr-3" title="Imprimir recibo">
           Imprimir
+        </button>
+        <button onclick="deleteSaleConfirm('${sale.id}')" class="text-red-600 hover:text-red-900" title="Eliminar venta">
+          Eliminar
         </button>
       </td>
     </tr>
@@ -1071,15 +1091,306 @@ window.addProductToSale = addProductToSale;
 window.updateSaleItemQuantity = updateSaleItemQuantity;
 window.removeSaleItem = removeSaleItem;
 
-window.viewSaleDetails = (saleId) => {
-  // TODO: Implementar vista de detalles de venta
-  showNotification('Funcionalidad en desarrollo', 'info');
+/**
+ * Muestra los detalles de una venta
+ */
+window.viewSaleDetails = async (saleId) => {
+  try {
+    console.log('👁️ Viendo detalles de venta:', saleId);
+    
+    const db = window.firebaseDB();
+    if (!db) {
+      showNotification('Firebase no disponible', 'error');
+      return;
+    }
+
+    // Obtener datos de la venta
+    const saleDoc = await db.collection('sales').doc(saleId).get();
+    
+    if (!saleDoc.exists) {
+      showNotification('Venta no encontrada', 'error');
+      return;
+    }
+
+    const saleData = { id: saleDoc.id, ...saleDoc.data() };
+    
+    // Mostrar modal con detalles
+    showSaleDetailsModal(saleData);
+    
+  } catch (error) {
+    console.error('❌ Error al cargar detalles de venta:', error);
+    showNotification('Error al cargar detalles de la venta', 'error');
+  }
 };
 
-window.printSaleReceipt = (saleId) => {
-  // TODO: Implementar reimpresión de recibo
-  showNotification('Funcionalidad en desarrollo', 'info');
+/**
+ * Imprime el recibo de una venta
+ */
+window.printSaleReceipt = async (saleId) => {
+  try {
+    console.log('🖨️ Imprimiendo recibo de venta:', saleId);
+    
+    const db = window.firebaseDB();
+    if (!db) {
+      showNotification('Firebase no disponible', 'error');
+      return;
+    }
+
+    // Obtener datos de la venta
+    const saleDoc = await db.collection('sales').doc(saleId).get();
+    
+    if (!saleDoc.exists) {
+      showNotification('Venta no encontrada', 'error');
+      return;
+    }
+
+    const saleData = { id: saleDoc.id, ...saleDoc.data() };
+    
+    // Crear ventana de impresión
+    printSaleReceiptWindow(saleData);
+    
+  } catch (error) {
+    console.error('❌ Error al imprimir recibo:', error);
+    showNotification('Error al imprimir recibo', 'error');
+  }
 };
+
+/**
+ * Confirma y elimina una venta
+ */
+window.deleteSaleConfirm = async (saleId) => {
+  try {
+    const db = window.firebaseDB();
+    if (!db) {
+      showNotification('Firebase no disponible', 'error');
+      return;
+    }
+
+    // Obtener datos de la venta para mostrar en confirmación
+    const saleDoc = await db.collection('sales').doc(saleId).get();
+    
+    if (!saleDoc.exists) {
+      showNotification('Venta no encontrada', 'error');
+      return;
+    }
+
+    const saleData = saleDoc.data();
+    const confirmMessage = `¿Estás seguro de eliminar la venta ${saleData.saleNumber}?\n\nCliente: ${saleData.customerName}\nTotal: ${formatCurrency(saleData.total)}\n\nEsta acción no se puede deshacer.`;
+    
+    if (confirm(confirmMessage)) {
+      console.log('🗑️ Eliminando venta:', saleId);
+      
+      // Eliminar venta de Firebase
+      await db.collection('sales').doc(saleId).delete();
+      
+      // Recargar lista de ventas
+      await loadRecentSales();
+      
+      showNotification('Venta eliminada exitosamente', 'success');
+      console.log('✅ Venta eliminada:', saleId);
+    }
+    
+  } catch (error) {
+    console.error('❌ Error al eliminar venta:', error);
+    showNotification('Error al eliminar la venta', 'error');
+  }
+};
+
+/**
+ * Muestra el modal con detalles de una venta
+ */
+function showSaleDetailsModal(saleData) {
+  // Crear modal si no existe
+  let modal = document.getElementById('sale-details-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'sale-details-modal';
+    modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 z-50';
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-screen overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-medium text-gray-900">Detalles de Venta</h3>
+            <button onclick="closeSaleDetailsModal()" class="text-gray-400 hover:text-gray-600">
+              <span class="text-2xl">×</span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="px-6 py-4">
+          <!-- Información de la venta -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Número de Venta</label>
+              <p class="text-lg font-semibold text-blue-600">${saleData.saleNumber}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Fecha</label>
+              <p class="text-sm text-gray-900">${formatDateTime(saleData.createdAt)}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Cliente</label>
+              <p class="text-sm text-gray-900">${saleData.customerName}</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
+              <p class="text-sm text-gray-900 capitalize">${saleData.paymentMethod}</p>
+            </div>
+          </div>
+
+          <!-- Productos -->
+          <div class="mb-6">
+            <h4 class="text-sm font-medium text-gray-700 mb-3">Productos</h4>
+            <div class="border border-gray-200 rounded-lg overflow-hidden">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Cantidad</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Precio</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  ${saleData.items.map(item => `
+                    <tr>
+                      <td class="px-4 py-2">
+                        <div class="text-sm font-medium text-gray-900">${sanitizeText(item.name)}</div>
+                        <div class="text-xs text-gray-500">${item.sku || 'Sin SKU'}</div>
+                      </td>
+                      <td class="px-4 py-2 text-sm text-gray-900">${item.quantity}</td>
+                      <td class="px-4 py-2 text-sm text-gray-900">${formatCurrency(item.price)}</td>
+                      <td class="px-4 py-2 text-sm font-medium text-gray-900">${formatCurrency(item.subtotal)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Totales -->
+          <div class="border-t border-gray-200 pt-4">
+            <div class="space-y-2">
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Subtotal:</span>
+                <span class="font-medium">${formatCurrency(saleData.subtotal)}</span>
+              </div>
+              ${saleData.discount > 0 ? `
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">Descuento:</span>
+                  <span class="font-medium text-green-600">-${formatCurrency(saleData.discount)}</span>
+                </div>
+              ` : ''}
+              <div class="flex justify-between text-lg font-semibold border-t pt-2">
+                <span>Total:</span>
+                <span>${formatCurrency(saleData.total)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+          <button onclick="printSaleReceiptWindow(${JSON.stringify(saleData).replace(/"/g, '"')})" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+            🖨️ Imprimir Recibo
+          </button>
+          <button onclick="closeSaleDetailsModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  modal.classList.remove('hidden');
+}
+
+/**
+ * Cierra el modal de detalles de venta
+ */
+function closeSaleDetailsModal() {
+  const modal = document.getElementById('sale-details-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+  }
+}
+
+/**
+ * Imprime el recibo de una venta en una nueva ventana
+ */
+function printSaleReceiptWindow(saleData) {
+  const receiptContent = createReceiptHTML(saleData);
+  
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <title>Recibo de Venta - ${saleData.saleNumber}</title>
+      <style>
+        body { 
+          font-family: Arial, sans-serif; 
+          font-size: 12px; 
+          line-height: 1.4; 
+          margin: 20px;
+          max-width: 300px;
+        }
+        .text-center { text-align: center; }
+        .text-sm { font-size: 11px; }
+        .text-xs { font-size: 10px; }
+        .font-bold { font-weight: bold; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .text-gray-600 { color: #666; }
+        .text-gray-500 { color: #888; }
+        .border-t { border-top: 1px solid #ccc; }
+        .border-b { border-bottom: 1px solid #ccc; }
+        .py-2 { padding: 8px 0; }
+        .mb-4 { margin-bottom: 16px; }
+        .mt-4 { margin-top: 16px; }
+        .pt-2 { padding-top: 8px; }
+        .space-y-2 > * + * { margin-top: 8px; }
+        .flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .flex-1 { flex: 1; }
+        .text-right { text-align: right; }
+        img.logo {
+          max-height: 60px;
+          width: auto;
+          display: block;
+          margin: 0 auto 8px;
+        }
+        @media print {
+          body {
+            margin: 0;
+            padding: 0;
+            max-width: none;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      ${receiptContent}
+    </body>
+    </html>
+  `);
+  
+  printWindow.document.close();
+  printWindow.focus();
+  
+  setTimeout(() => {
+    printWindow.print();
+    printWindow.close();
+  }, 250);
+}
+
+// Hacer funciones disponibles globalmente
+window.closeSaleDetailsModal = closeSaleDetailsModal;
+window.printSaleReceiptWindow = printSaleReceiptWindow;
 
 /**
  * Maneja la exportación de ventas

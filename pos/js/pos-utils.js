@@ -12,15 +12,22 @@ function showNotification(message, type = 'info', duration = 5000) {
 
   const notification = document.createElement('div');
   notification.className = `
-    max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5
-    transform transition-all duration-300 ease-in-out translate-x-full opacity-0
+    max-w-md w-full bg-white shadow-xl rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5
+    transform transition-all duration-300 ease-out opacity-0 scale-95 mb-3
   `;
 
   const colors = {
-    success: 'text-green-500',
-    error: 'text-red-500',
-    warning: 'text-yellow-500',
-    info: 'text-blue-500'
+    success: 'text-green-600',
+    error: 'text-red-600',
+    warning: 'text-yellow-600',
+    info: 'text-blue-600'
+  };
+
+  const bgColors = {
+    success: 'bg-green-50 border-green-200',
+    error: 'bg-red-50 border-red-200',
+    warning: 'bg-yellow-50 border-yellow-200',
+    info: 'bg-blue-50 border-blue-200'
   };
 
   const icons = {
@@ -31,31 +38,35 @@ function showNotification(message, type = 'info', duration = 5000) {
   };
 
   notification.innerHTML = `
-    <div class="flex-1 w-0 p-4">
+    <div class="flex-1 p-4">
       <div class="flex items-start">
         <div class="flex-shrink-0">
-          <span class="text-xl">${icons[type] || icons.info}</span>
+          <span class="text-2xl">${icons[type] || icons.info}</span>
         </div>
         <div class="ml-3 flex-1">
-          <p class="text-sm font-medium text-gray-900">
+          <p class="text-base font-medium text-gray-900 leading-relaxed">
             ${message}
           </p>
         </div>
       </div>
     </div>
     <div class="flex border-l border-gray-200">
-      <button class="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-600 hover:text-gray-500 focus:outline-none">
+      <button class="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-lg font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 focus:outline-none transition-colors">
         ×
       </button>
     </div>
   `;
+
+  // Aplicar colores según el tipo
+  notification.classList.add(...bgColors[type].split(' '));
 
   // Agregar al container
   container.appendChild(notification);
 
   // Animar entrada
   setTimeout(() => {
-    notification.classList.remove('translate-x-full', 'opacity-0');
+    notification.classList.remove('opacity-0', 'scale-95');
+    notification.classList.add('opacity-100', 'scale-100');
   }, 100);
 
   // Configurar botón de cerrar
@@ -76,7 +87,8 @@ function showNotification(message, type = 'info', duration = 5000) {
  * Remueve una notificación
  */
 function removeNotification(notification) {
-  notification.classList.add('translate-x-full', 'opacity-0');
+  notification.classList.remove('opacity-100', 'scale-100');
+  notification.classList.add('opacity-0', 'scale-95');
   setTimeout(() => {
     if (notification.parentNode) {
       notification.parentNode.removeChild(notification);

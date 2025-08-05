@@ -39,13 +39,25 @@ function setupQuickProductEvents() {
     });
   }
 
-  // Manejar Enter en el formulario
+  // Manejar Enter en el formulario - prevenir doble envío
   const quickProductForm = document.getElementById('quick-product-form');
   if (quickProductForm) {
+    let isSubmitting = false;
+    
     quickProductForm.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        handleSaveQuickProduct();
+        
+        // Prevenir múltiples envíos
+        if (isSubmitting) {
+          console.log('⚠️ Envío ya en progreso, ignorando Enter');
+          return;
+        }
+        
+        isSubmitting = true;
+        handleSaveQuickProduct().finally(() => {
+          isSubmitting = false;
+        });
       }
     });
   }
@@ -113,9 +125,16 @@ function closeQuickProductModal() {
 /**
  * Maneja el guardado del producto rápido
  */
-function handleSaveQuickProduct() {
+async function handleSaveQuickProduct() {
   try {
     console.log('💾 Guardando producto rápido...');
+    
+    // Deshabilitar botón para prevenir doble click
+    const saveBtn = document.getElementById('save-quick-product');
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Agregando...';
+    }
     
     const name = document.getElementById('quick-product-name').value.trim();
     const size = document.getElementById('quick-product-size').value.trim();
@@ -193,6 +212,13 @@ function handleSaveQuickProduct() {
   } catch (error) {
     console.error('❌ Error al agregar producto rápido:', error);
     showNotification('Error al agregar producto rápido', 'error');
+  } finally {
+    // Rehabilitar botón
+    const saveBtn = document.getElementById('save-quick-product');
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Agregar a la Venta';
+    }
   }
 }
 
