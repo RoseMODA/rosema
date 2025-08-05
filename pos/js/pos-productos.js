@@ -374,15 +374,16 @@ function renderProductsList() {
         <div class="flex items-center">
           <div class="flex-shrink-0 h-12 w-12">
             ${product.images && product.images.length > 0 ? 
-              `<img class="h-12 w-12 rounded-lg object-cover" src="${product.images[0]}" alt="${product.name}">` :
+              `<img class="h-12 w-12 rounded-lg object-cover" src="${product.images[0]}" alt="${sanitizeText(product.name)}" onerror="this.parentElement.innerHTML='<div class=\\'h-12 w-12 rounded-lg bg-gray-200 flex items-center justify-center\\'><span class=\\'text-gray-400 text-xs\\'>Sin imagen</span></div>'">` :
               `<div class="h-12 w-12 rounded-lg bg-gray-200 flex items-center justify-center">
                 <span class="text-gray-400 text-xs">Sin imagen</span>
               </div>`
             }
           </div>
           <div class="ml-4">
-            <div class="text-sm font-medium text-gray-900">${product.name}</div>
+            <div class="text-sm font-medium text-gray-900">${sanitizeText(product.name)}</div>
             <div class="text-sm text-gray-500">${product.sku || 'Sin SKU'}</div>
+            ${product.category ? `<div class="text-xs text-gray-400">${sanitizeText(product.category)}</div>` : ''}
           </div>
         </div>
       </td>
@@ -390,6 +391,7 @@ function renderProductsList() {
         <span class="text-sm ${(product.stock || 0) <= 5 ? 'text-red-600 font-semibold' : 'text-gray-900'}">
           ${product.stock || 0}
         </span>
+        ${(product.stock || 0) <= 5 ? '<div class="text-xs text-red-500">Stock bajo</div>' : ''}
       </td>
       <td class="px-6 py-4 whitespace-nowrap">
         <div class="text-sm text-gray-900">${formatCurrency(product.price || 0)}</div>
@@ -402,10 +404,10 @@ function renderProductsList() {
         <span class="text-sm text-gray-500">-</span>
       </td>
       <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-        <button onclick="editProduct('${product.id}')" class="text-blue-600 hover:text-blue-900 mr-3">
+        <button onclick="editProduct('${product.id}')" class="text-blue-600 hover:text-blue-900 mr-3" title="Editar producto">
           Editar
         </button>
-        <button onclick="deleteProductConfirm('${product.id}')" class="text-red-600 hover:text-red-900">
+        <button onclick="deleteProductConfirm('${product.id}')" class="text-red-600 hover:text-red-900" title="Eliminar producto">
           Eliminar
         </button>
       </td>
@@ -504,9 +506,9 @@ async function handleSaveProduct() {
       name: document.getElementById('product-name').value.trim(),
       category: document.getElementById('product-category').value,
       sku: document.getElementById('product-sku').value.trim(),
-      price: parseFloat(document.getElementById('product-price').value) || 0,
-      originalPrice: parseFloat(document.getElementById('product-original-price').value) || null,
-      stock: parseInt(document.getElementById('product-stock').value) || 0,
+      price: document.getElementById('product-price').value,
+      originalPrice: document.getElementById('product-original-price').value,
+      stock: document.getElementById('product-stock').value,
       colors: document.getElementById('product-colors').value.split(',').map(c => c.trim()).filter(c => c),
       sizes: document.getElementById('product-sizes').value.split(',').map(s => s.trim()).filter(s => s),
       tags: document.getElementById('product-tags').value.split(',').map(t => t.trim()).filter(t => t),
@@ -516,8 +518,22 @@ async function handleSaveProduct() {
     };
 
     // Validar datos requeridos
-    if (!productData.name || !productData.category || !productData.price) {
-      showNotification('Por favor completa todos los campos requeridos', 'error');
+    if (!productData.name || !productData.category || productData.price === '' || productData.price === undefined) {
+      showNotification('Por favor completa todos los campos requeridos: nombre, categoría y precio', 'error');
+      return;
+    }
+
+    // Validar precio
+    const price = parseFloat(productData.price);
+    if (isNaN(price) || price < 0) {
+      showNotification('El precio debe ser un número válido mayor o igual a 0', 'error');
+      return;
+    }
+
+    // Validar stock
+    const stock = parseInt(productData.stock);
+    if (isNaN(stock) || stock < 0) {
+      showNotification('El stock debe ser un número válido mayor o igual a 0', 'error');
       return;
     }
 
@@ -527,11 +543,11 @@ async function handleSaveProduct() {
     // Validar archivos
     for (const file of imageFiles) {
       if (!validateFileType(file)) {
-        showNotification('Formato de imagen no válido. Use JPG, PNG o WebP', 'error');
+        showNotification(`Formato de imagen no válido para ${file.name}. Use JPG, PNG o WebP`, 'error');
         return;
       }
       if (!validateFileSize(file)) {
-        showNotification('El archivo es muy grande. Máximo 5MB por imagen', 'error');
+        showNotification(`El archivo ${file.name} es muy grande. Máximo 5MB por imagen`, 'error');
         return;
       }
     }
@@ -546,6 +562,7 @@ async function handleSaveProduct() {
     if (result.success) {
       closeProductModal();
       // Recargar productos
+      showNotification('Recargando lista de productos...', 'info', 2000);
       currentProducts = await getProducts();
       filteredProducts = [...currentProducts];
       renderProductsList();
@@ -557,7 +574,7 @@ async function handleSaveProduct() {
   } finally {
     const saveBtn = document.getElementById('save-product');
     saveBtn.disabled = false;
-    saveBtn.textContent = 'Guardar Producto';
+    saveBtn.textContent = isEditMode ? 'Actualizar Producto' : 'Guardar Producto';
   }
 }
 

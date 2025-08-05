@@ -416,41 +416,41 @@ function handleProductSearch(e) {
   const matchingProducts = allProducts.filter(product => 
     product.name.toLowerCase().includes(searchTerm) ||
     (product.sku && product.sku.toLowerCase().includes(searchTerm)) ||
-    (product.tags && product.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
+    (product.tags && Array.isArray(product.tags) && product.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
   ).slice(0, 5); // Limitar a 5 resultados
 
   if (matchingProducts.length > 0) {
     resultsContainer.classList.remove('hidden');
     resultsList.innerHTML = matchingProducts.map(product => `
-      <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer product-search-result" data-product-id="${product.id}">
+      <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer product-search-result" data-product-id="${product.id}" onclick="addProductToSale('${product.id}')">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
             ${product.images && product.images.length > 0 ? 
-              `<img src="${product.images[0]}" alt="${product.name}" class="w-10 h-10 object-cover rounded" onerror="this.style.display='none'">` :
+              `<img src="${product.images[0]}" alt="${sanitizeText(product.name)}" class="w-10 h-10 object-cover rounded" onerror="this.parentElement.innerHTML='<span class=\\'text-xs text-gray-500\\'>📦</span>'">` :
               `<span class="text-xs text-gray-500">📦</span>`
             }
           </div>
           <div>
-            <p class="font-medium text-sm">${product.name}</p>
+            <p class="font-medium text-sm">${sanitizeText(product.name)}</p>
             <p class="text-xs text-gray-500">${product.sku || 'Sin SKU'} • Stock: ${product.stock || 0}</p>
+            ${(product.stock || 0) <= 5 ? '<p class="text-xs text-red-500">Stock bajo</p>' : ''}
           </div>
         </div>
         <div class="text-right">
           <p class="font-semibold">${formatCurrency(product.price || 0)}</p>
+          ${product.originalPrice ? `<p class="text-xs text-gray-500 line-through">${formatCurrency(product.originalPrice)}</p>` : ''}
         </div>
       </div>
     `).join('');
-    
-    // Agregar event listeners a los resultados
-    document.querySelectorAll('.product-search-result').forEach(element => {
-      element.addEventListener('click', (e) => {
-        e.preventDefault();
-        const productId = element.getAttribute('data-product-id');
-        addProductToSale(productId);
-      });
-    });
   } else {
     resultsContainer.classList.add('hidden');
+    resultsList.innerHTML = `
+      <div class="p-3 text-center text-gray-500">
+        <p class="text-sm">No se encontraron productos</p>
+        <p class="text-xs">Intenta con otro término de búsqueda</p>
+      </div>
+    `;
+    resultsContainer.classList.remove('hidden');
   }
 }
 
@@ -480,48 +480,65 @@ function handleBarcodeInput(e) {
  * Agrega un producto al carrito de venta
  */
 function addProductToSale(productId) {
-  const product = allProducts.find(p => p.id === productId);
-  if (!product) {
-    showNotification('Producto no encontrado', 'error');
-    return;
-  }
-
-  if ((product.stock || 0) <= 0) {
-    showNotification('Producto sin stock disponible', 'warning');
-    return;
-  }
-
-  // Verificar si ya está en el carrito
-  const existingItem = currentSaleCart.find(item => item.productId === productId);
-  
-  if (existingItem) {
-    if (existingItem.quantity >= product.stock) {
-      showNotification('No hay más stock disponible', 'warning');
+  try {
+    console.log('🛒 Agregando producto a la venta:', productId);
+    
+    const product = allProducts.find(p => p.id === productId);
+    if (!product) {
+      showNotification('Producto no encontrado', 'error');
+      console.error('❌ Producto no encontrado:', productId);
       return;
     }
-    existingItem.quantity++;
-  } else {
-    currentSaleCart.push({
-      id: generateId(),
-      productId: productId,
-      name: product.name,
-      price: product.price || 0,
-      originalPrice: product.originalPrice,
-      sku: product.sku,
-      image: product.images?.[0],
-      quantity: 1,
-      maxStock: product.stock || 0
-    });
-  }
 
-  renderSaleCart();
-  updateSaleTotals();
-  
-  // Limpiar búsqueda
-  document.getElementById('product-search').value = '';
-  document.getElementById('search-results').classList.add('hidden');
-  
-  showNotification(`${product.name} agregado a la venta`, 'success');
+    if ((product.stock || 0) <= 0) {
+      showNotification(`${product.name} sin stock disponible`, 'warning');
+      return;
+    }
+
+    // Verificar si ya está en el carrito
+    const existingItem = currentSaleCart.find(item => item.productId === productId);
+    
+    if (existingItem) {
+      if (existingItem.quantity >= product.stock) {
+        showNotification(`No hay más stock disponible para ${product.name}`, 'warning');
+        return;
+      }
+      existingItem.quantity++;
+      console.log(`✅ Cantidad actualizada para ${product.name}: ${existingItem.quantity}`);
+    } else {
+      const newItem = {
+        id: generateId(),
+        productId: productId,
+        name: product.name,
+        price: product.price || 0,
+        originalPrice: product.originalPrice,
+        sku: product.sku,
+        image: product.images && product.images.length > 0 ? product.images[0] : null,
+        quantity: 1,
+        maxStock: product.stock || 0,
+        category: product.category
+      };
+      
+      currentSaleCart.push(newItem);
+      console.log('✅ Nuevo producto agregado al carrito:', newItem);
+    }
+
+    renderSaleCart();
+    updateSaleTotals();
+    
+    // Limpiar búsqueda
+    const searchInput = document.getElementById('product-search');
+    const searchResults = document.getElementById('search-results');
+    
+    if (searchInput) searchInput.value = '';
+    if (searchResults) searchResults.classList.add('hidden');
+    
+    showNotification(`${product.name} agregado a la venta`, 'success');
+    
+  } catch (error) {
+    console.error('❌ Error al agregar producto a la venta:', error);
+    showNotification('Error al agregar producto a la venta', 'error');
+  }
 }
 
 /**
@@ -529,6 +546,11 @@ function addProductToSale(productId) {
  */
 function renderSaleCart() {
   const container = document.getElementById('sale-cart-items');
+  
+  if (!container) {
+    console.error('❌ Contenedor sale-cart-items no encontrado');
+    return;
+  }
   
   if (currentSaleCart.length === 0) {
     container.innerHTML = `
@@ -542,35 +564,46 @@ function renderSaleCart() {
   }
 
   container.innerHTML = currentSaleCart.map(item => `
-    <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+    <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg mb-2">
       <div class="flex items-center space-x-3 flex-1">
         <div class="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
           ${item.image ? 
-            `<img src="${item.image}" alt="${item.name}" class="w-12 h-12 object-cover rounded">` :
+            `<img src="${item.image}" alt="${sanitizeText(item.name)}" class="w-12 h-12 object-cover rounded" onerror="this.parentElement.innerHTML='<span class=\\'text-xs text-gray-500\\'>📦</span>'">` :
             `<span class="text-xs text-gray-500">📦</span>`
           }
         </div>
         <div class="flex-1">
-          <p class="font-medium text-sm">${item.name}</p>
+          <p class="font-medium text-sm">${sanitizeText(item.name)}</p>
           <p class="text-xs text-gray-500">${item.sku || 'Sin SKU'}</p>
           <p class="text-sm font-semibold">${formatCurrency(item.price)}</p>
+          ${item.originalPrice ? `<p class="text-xs text-gray-400 line-through">${formatCurrency(item.originalPrice)}</p>` : ''}
         </div>
       </div>
       
       <div class="flex items-center space-x-2">
-        <button onclick="updateSaleItemQuantity('${item.id}', ${item.quantity - 1})" class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50" ${item.quantity <= 1 ? 'disabled' : ''}>
+        <button onclick="updateSaleItemQuantity('${item.id}', ${item.quantity - 1})" 
+                class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 ${item.quantity <= 1 ? 'opacity-50 cursor-not-allowed' : ''}" 
+                ${item.quantity <= 1 ? 'disabled' : ''}
+                title="Disminuir cantidad">
           -
         </button>
         <span class="w-8 text-center font-medium">${item.quantity}</span>
-        <button onclick="updateSaleItemQuantity('${item.id}', ${item.quantity + 1})" class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50" ${item.quantity >= item.maxStock ? 'disabled' : ''}>
+        <button onclick="updateSaleItemQuantity('${item.id}', ${item.quantity + 1})" 
+                class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 ${item.quantity >= item.maxStock ? 'opacity-50 cursor-not-allowed' : ''}" 
+                ${item.quantity >= item.maxStock ? 'disabled' : ''}
+                title="Aumentar cantidad">
           +
         </button>
-        <button onclick="removeSaleItem('${item.id}')" class="ml-2 text-red-600 hover:text-red-800">
+        <button onclick="removeSaleItem('${item.id}')" 
+                class="ml-2 text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50"
+                title="Eliminar producto">
           🗑️
         </button>
       </div>
     </div>
   `).join('');
+  
+  console.log(`🛒 Carrito renderizado con ${currentSaleCart.length} productos`);
 }
 
 /**

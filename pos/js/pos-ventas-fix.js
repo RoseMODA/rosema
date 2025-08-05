@@ -1,69 +1,105 @@
 /**
- * Corrección para la funcionalidad de ventas
+ * Correcciones adicionales para la funcionalidad de ventas
+ * Este archivo se asegura de que todas las funciones estén disponibles globalmente
  */
 
-// Sobrescribir la función addProductToSale con debugging
-window.addProductToSale = function(productId) {
-  console.log('🔍 Buscando producto con ID:', productId);
-  console.log('📦 Productos disponibles:', allProducts.length);
-  
-  const product = allProducts.find(p => p.id === productId);
-  if (!product) {
-    console.error('❌ Producto no encontrado con ID:', productId);
-    console.log('📋 IDs disponibles:', allProducts.map(p => p.id));
-    showNotification('Producto no encontrado', 'error');
-    return;
+// Función para asegurar que las variables globales estén disponibles
+function ensureGlobalVariables() {
+  if (typeof window.currentSaleCart === 'undefined') {
+    window.currentSaleCart = [];
+    console.log('🔧 currentSaleCart inicializado');
   }
-
-  console.log('✅ Producto encontrado:', product.name);
-
-  if ((product.stock || 0) <= 0) {
-    showNotification('Producto sin stock disponible', 'warning');
-    return;
-  }
-
-  // Verificar si ya está en el carrito
-  const existingItem = currentSaleCart.find(item => item.productId === productId);
   
-  if (existingItem) {
-    if (existingItem.quantity >= product.stock) {
-      showNotification('No hay más stock disponible', 'warning');
-      return;
+  if (typeof window.allProducts === 'undefined') {
+    window.allProducts = [];
+    console.log('🔧 allProducts inicializado');
+  }
+  
+  if (typeof window.currentDiscount === 'undefined') {
+    window.currentDiscount = 0;
+    console.log('🔧 currentDiscount inicializado');
+  }
+}
+
+// Función para verificar que los elementos del DOM existan
+function verifyDOMElements() {
+  const requiredElements = [
+    'product-search',
+    'search-results',
+    'search-results-list',
+    'sale-cart-items',
+    'btn-quick-product',
+    'quick-product-modal'
+  ];
+  
+  const missingElements = [];
+  
+  requiredElements.forEach(elementId => {
+    if (!document.getElementById(elementId)) {
+      missingElements.push(elementId);
     }
-    existingItem.quantity++;
+  });
+  
+  if (missingElements.length > 0) {
+    console.warn('⚠️ Elementos DOM faltantes:', missingElements);
   } else {
-    currentSaleCart.push({
-      id: generateId(),
-      productId: productId,
-      name: product.name,
-      price: product.price || 0,
-      originalPrice: product.originalPrice,
-      sku: product.sku,
-      image: product.images?.[0],
-      quantity: 1,
-      maxStock: product.stock || 0
-    });
+    console.log('✅ Todos los elementos DOM requeridos están presentes');
   }
-
-  renderSaleCart();
-  updateSaleTotals();
   
-  // Limpiar búsqueda
-  document.getElementById('product-search').value = '';
-  document.getElementById('search-results').classList.add('hidden');
-  
-  showNotification(`${product.name} agregado a la venta`, 'success');
-};
+  return missingElements.length === 0;
+}
 
-// Asegurar que las funciones estén disponibles globalmente
-document.addEventListener('DOMContentLoaded', function() {
+// Función para reinicializar eventos si es necesario
+function reinitializeEvents() {
+  // Reinicializar eventos de producto rápido si la función existe
+  if (typeof setupQuickProductEvents === 'function') {
+    setupQuickProductEvents();
+    console.log('🔧 Eventos de producto rápido reinicializados');
+  }
+  
+  // Verificar que addProductToSale esté disponible globalmente
+  if (typeof window.addProductToSale !== 'function') {
+    console.warn('⚠️ addProductToSale no está disponible globalmente');
+  }
+}
+
+// Función principal de corrección
+function applyVentasFixes() {
   console.log('🔧 Aplicando correcciones de ventas...');
   
-  // Verificar que las variables globales estén disponibles
-  if (typeof currentSaleCart === 'undefined') {
-    window.currentSaleCart = [];
+  try {
+    // Asegurar variables globales
+    ensureGlobalVariables();
+    
+    // Verificar elementos DOM
+    const domReady = verifyDOMElements();
+    
+    if (domReady) {
+      // Reinicializar eventos
+      reinitializeEvents();
+      
+      console.log('✅ Correcciones de ventas aplicadas exitosamente');
+    } else {
+      console.warn('⚠️ Algunos elementos DOM no están listos, reintentando...');
+      setTimeout(applyVentasFixes, 1000);
+    }
+    
+  } catch (error) {
+    console.error('❌ Error al aplicar correcciones de ventas:', error);
   }
-  if (typeof allProducts === 'undefined') {
-    window.allProducts = [];
-  }
-});
+}
+
+// Aplicar correcciones cuando el DOM esté listo
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', applyVentasFixes);
+} else {
+  applyVentasFixes();
+}
+
+// También aplicar después de un delay para asegurar que todo esté cargado
+setTimeout(applyVentasFixes, 2000);
+
+// Hacer funciones disponibles globalmente para debugging
+window.ensureGlobalVariables = ensureGlobalVariables;
+window.verifyDOMElements = verifyDOMElements;
+window.applyVentasFixes = applyVentasFixes;

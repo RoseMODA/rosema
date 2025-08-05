@@ -58,7 +58,6 @@
           <button id="nav-ventas" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-red-500 transition-colors flex items-center space-x-3">
             <span class="text-lg">🛒</span>
             <span class="font-medium">Ventas</span>
-            
           </button>
         </li>
         <li>
@@ -132,17 +131,18 @@
   <!-- Cargar Firebase config primero -->
   <script src="firebase.js"></script>
   
-  <!-- Cargar módulos del POS -->
-  <script src="js/pos-utils.js"></script>
-  <script src="js/firebase-products.js"></script>
-  <script src="js/pos-dashboard.js"></script>
-  <script src="js/pos-productos.js"></script>
-  <script src="js/pos-ventas.js"></script>
-  <script src="js/pos-estadisticas.js"></script>
-  <script src="js/pos-proveedores.js"></script>
-  <script src="js/pos-facturas.js"></script>
-  <script src="js/pos-ventas-quick.js"></script>
-  <script src="js/pos-ventas-fix.js"></script>
-  <script src="js/pos-main.js"></script>
+  <!-- Cargar módulos del POS en orden correcto -->
+  <script src="js/pos-utils.js" defer></script>
+  <script src="js/firebase-products.js" defer></script>
+  <script src="js/pos-dashboard.js" defer></script>
+  <script src="js/pos-productos.js" defer></script>
+  <script src="js/pos-ventas.js" defer></script>
+  <script src="js/pos-ventas-quick.js" defer></script>
+  <script src="js/pos-estadisticas.js" defer></script>
+  <script src="js/pos-proveedores.js" defer></script>
+  <script src="js/pos-facturas.js" defer></script>
+  <script src="js/pos-ventas-fix.js" defer></script>
+  <script src="js/pos-main.js" defer></script>
+  
 </body>
 </html>

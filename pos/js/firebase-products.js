@@ -71,18 +71,24 @@ async function createProduct(productData, imageFiles = []) {
     }
     
     // Validar datos requeridos
-    if (!productData.name || !productData.category || !productData.price) {
+    if (!productData.name || !productData.category || productData.price === undefined || productData.price === '') {
       throw new Error('Faltan datos requeridos: nombre, categoría y precio');
     }
     
-    // Preparar datos del producto
+    // Preparar datos del producto con validaciones mejoradas
     const newProduct = {
-      ...productData,
-      price: parseFloat(productData.price),
+      name: productData.name.trim(),
+      category: productData.category,
+      sku: productData.sku ? productData.sku.trim() : '',
+      price: parseFloat(productData.price) || 0,
       originalPrice: productData.originalPrice ? parseFloat(productData.originalPrice) : null,
       stock: parseInt(productData.stock) || 0,
-      featured: productData.featured || false,
-      onSale: productData.onSale || false,
+      colors: Array.isArray(productData.colors) ? productData.colors : [],
+      sizes: Array.isArray(productData.sizes) ? productData.sizes : [],
+      tags: Array.isArray(productData.tags) ? productData.tags : [],
+      description: productData.description ? productData.description.trim() : '',
+      featured: Boolean(productData.featured),
+      onSale: Boolean(productData.onSale),
       images: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -100,10 +106,22 @@ async function createProduct(productData, imageFiles = []) {
       
       for (const file of imageFiles) {
         try {
+          // Validar archivo antes de subir
+          if (!validateFileType(file)) {
+            console.warn(`⚠️ Archivo ${file.name} tiene formato no válido`);
+            continue;
+          }
+          
+          if (!validateFileSize(file)) {
+            console.warn(`⚠️ Archivo ${file.name} es muy grande`);
+            continue;
+          }
+          
           const imageUrl = await uploadProductImage(file, productId);
           imageUrls.push(imageUrl);
+          console.log(`✅ Imagen subida: ${file.name}`);
         } catch (error) {
-          console.error('❌ Error al subir imagen:', error);
+          console.error(`❌ Error al subir imagen ${file.name}:`, error);
           // Continuar con otras imágenes
         }
       }
@@ -114,6 +132,7 @@ async function createProduct(productData, imageFiles = []) {
           images: imageUrls,
           updatedAt: new Date().toISOString()
         });
+        console.log(`✅ ${imageUrls.length} imágenes agregadas al producto`);
       }
     }
     
@@ -139,12 +158,25 @@ async function updateProduct(productId, updatedData, newImageFiles = []) {
       throw new Error('Firebase no está disponible');
     }
     
-    // Preparar datos actualizados
+    // Validar datos requeridos
+    if (!updatedData.name || !updatedData.category || updatedData.price === undefined || updatedData.price === '') {
+      throw new Error('Faltan datos requeridos: nombre, categoría y precio');
+    }
+    
+    // Preparar datos actualizados con validaciones mejoradas
     const updateData = {
-      ...updatedData,
-      price: parseFloat(updatedData.price),
+      name: updatedData.name.trim(),
+      category: updatedData.category,
+      sku: updatedData.sku ? updatedData.sku.trim() : '',
+      price: parseFloat(updatedData.price) || 0,
       originalPrice: updatedData.originalPrice ? parseFloat(updatedData.originalPrice) : null,
       stock: parseInt(updatedData.stock) || 0,
+      colors: Array.isArray(updatedData.colors) ? updatedData.colors : [],
+      sizes: Array.isArray(updatedData.sizes) ? updatedData.sizes : [],
+      tags: Array.isArray(updatedData.tags) ? updatedData.tags : [],
+      description: updatedData.description ? updatedData.description.trim() : '',
+      featured: Boolean(updatedData.featured),
+      onSale: Boolean(updatedData.onSale),
       updatedAt: new Date().toISOString()
     };
     
@@ -163,10 +195,22 @@ async function updateProduct(productId, updatedData, newImageFiles = []) {
     if (newImageFiles && newImageFiles.length > 0) {
       for (const file of newImageFiles) {
         try {
+          // Validar archivo antes de subir
+          if (!validateFileType(file)) {
+            console.warn(`⚠️ Archivo ${file.name} tiene formato no válido`);
+            continue;
+          }
+          
+          if (!validateFileSize(file)) {
+            console.warn(`⚠️ Archivo ${file.name} es muy grande`);
+            continue;
+          }
+          
           const imageUrl = await uploadProductImage(file, productId);
           imageUrls.push(imageUrl);
+          console.log(`✅ Nueva imagen agregada: ${file.name}`);
         } catch (error) {
-          console.error('❌ Error al subir nueva imagen:', error);
+          console.error(`❌ Error al subir nueva imagen ${file.name}:`, error);
         }
       }
       
