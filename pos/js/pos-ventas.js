@@ -59,8 +59,6 @@ function createVentasHTML() {
       <!-- Panel de productos y búsqueda -->
       <div class="lg:col-span-2">
         <div class="bg-white rounded-lg shadow p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Nueva Venta</h3>
-          
           <!-- Búsqueda de productos -->
           <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -75,6 +73,9 @@ function createVentasHTML() {
               >
               <button id="btn-scan-barcode" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
                 📷 Escanear
+              </button>
+              <button id="btn-quick-product" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                ➕ Producto Rápido
               </button>
             </div>
           </div>
@@ -181,6 +182,48 @@ function createVentasHTML() {
             </button>
             <button id="btn-clear-sale" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
               Limpiar Venta
+            </button>
+          </div>
+        </div>
+      </div>
+    <!-- Modal para producto rápido -->
+    <div id="quick-product-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+      <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Agregar Producto Rápido</h3>
+          </div>
+          
+          <form id="quick-product-form" class="px-6 py-4">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del producto *</label>
+                <input type="text" id="quick-product-name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Talla/Tamaño</label>
+                <input type="text" id="quick-product-size" placeholder="S, M, L, XL, etc." class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Precio *</label>
+                <input type="number" id="quick-product-price" required min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
+                <input type="number" id="quick-product-quantity" value="1" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+              </div>
+            </div>
+          </form>
+          
+          <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+            <button id="cancel-quick-product" type="button" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+              Cancelar
+            </button>
+            <button id="save-quick-product" type="button" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+              Agregar a la Venta
             </button>
           </div>
         </div>
@@ -379,11 +422,11 @@ function handleProductSearch(e) {
   if (matchingProducts.length > 0) {
     resultsContainer.classList.remove('hidden');
     resultsList.innerHTML = matchingProducts.map(product => `
-      <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer" onclick="addProductToSale('${product.id}')">
+      <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer product-search-result" data-product-id="${product.id}">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
             ${product.images && product.images.length > 0 ? 
-              `<img src="${product.images[0]}" alt="${product.name}" class="w-10 h-10 object-cover rounded">` :
+              `<img src="${product.images[0]}" alt="${product.name}" class="w-10 h-10 object-cover rounded" onerror="this.style.display='none'">` :
               `<span class="text-xs text-gray-500">📦</span>`
             }
           </div>
@@ -397,6 +440,15 @@ function handleProductSearch(e) {
         </div>
       </div>
     `).join('');
+    
+    // Agregar event listeners a los resultados
+    document.querySelectorAll('.product-search-result').forEach(element => {
+      element.addEventListener('click', (e) => {
+        e.preventDefault();
+        const productId = element.getAttribute('data-product-id');
+        addProductToSale(productId);
+      });
+    });
   } else {
     resultsContainer.classList.add('hidden');
   }
