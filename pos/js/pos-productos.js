@@ -222,7 +222,7 @@ function createProductosHTML() {
                   <div class="space-y-2">
                     <div class="text-gray-400">
                       <svg class="mx-auto h-12 w-12" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <!-- (SVG content) -->
                       </svg>
                     </div>
                     <div>
@@ -234,9 +234,9 @@ function createProductosHTML() {
                     <p class="text-xs text-gray-500">Máximo 5MB por imagen. Formatos: JPG, PNG, WebP</p>
                   </div>
                 </div>
-                <!-- Preview container -->
                 <div id="image-preview-container" class="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3"></div>
               </div>
+
               
               <!-- Opciones adicionales -->
               <div class="md:col-span-2 flex items-center space-x-6">
@@ -719,3 +719,71 @@ window.deleteProductConfirm = async (productId) => {
     showNotification('Error al eliminar el producto', 'error');
   }
 };
+
+
+
+const imageInput = document.getElementById('product-images');
+const selectImagesBtn = document.getElementById('select-images-btn');
+const dropZone = document.getElementById('image-drop-zone');
+const previewContainer = document.getElementById('image-preview-container');
+
+let selectedImages = [];
+
+selectImagesBtn.addEventListener('click', () => {
+  imageInput.click();
+});
+
+imageInput.addEventListener('change', (e) => {
+  handleImageFiles(e.target.files);
+});
+
+dropZone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropZone.classList.add('border-blue-500');
+});
+
+dropZone.addEventListener('dragleave', () => {
+  dropZone.classList.remove('border-blue-500');
+});
+
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('border-blue-500');
+  handleImageFiles(e.dataTransfer.files);
+});
+
+function handleImageFiles(files) {
+  previewContainer.innerHTML = ''; // limpiar previews anteriores
+  selectedImages = [];
+
+  for (let file of files) {
+    if (!file.type.startsWith('image/')) continue;
+    if (file.size > 5 * 1024 * 1024) continue;
+
+    selectedImages.push(file);
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      const div = document.createElement('div');
+      div.className = 'relative';
+
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.className = 'w-full h-24 object-cover rounded-md';
+
+      const removeBtn = document.createElement('button');
+      removeBtn.innerText = '×';
+      removeBtn.className = 'absolute top-1 right-1 text-white bg-black bg-opacity-50 rounded-full w-6 h-6 text-xs';
+      removeBtn.onclick = () => {
+        div.remove();
+        selectedImages = selectedImages.filter(f => f !== file);
+      };
+
+      div.appendChild(img);
+      div.appendChild(removeBtn);
+      previewContainer.appendChild(div);
+    };
+
+    reader.readAsDataURL(file);
+  }
+}
