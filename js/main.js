@@ -2,6 +2,9 @@
  * Archivo Principal - Main.js
  * Coordina todos los módulos y maneja la inicialización de la aplicación
  */
+import { db } from './firebase.js';
+// y luego usás db directamente
+
 
 import { 
   loadProducts, 

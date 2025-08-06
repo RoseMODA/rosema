@@ -9,6 +9,13 @@
   <link rel="stylesheet" href="style.css">
 </head>
 
+ 
+  <!-- Firebase CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+  
 
 <body>
 
@@ -48,9 +55,10 @@
 
     <!-- Buscador + carrito -->
     <div class="flex items-center space-x-3">
-      <!-- Buscador completo en pantallas medianas y mayores -->
+    <!-- Buscador completo en pantallas medianas y mayores -->
       <div class="hidden sm:flex items-center relative">
-        <input type="search" placeholder="Buscar..." aria-label="Buscar productos"
+        <label for="search" class="sr-only">Buscar productos</label>
+        <input type="search" id="search" name="search" placeholder="Buscar..." aria-label="Buscar productos"
           class="rounded-full py-2 px-4 pl-10 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#b22a26] w-48" />
         <svg class="w-5 h-5 text-gray-500 absolute top-2.5 left-3" fill="none" stroke="currentColor" stroke-width="2"
           viewBox="0 0 24 24">
@@ -58,6 +66,7 @@
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
       </div>
+
 
       <!-- Solo ícono de lupa en mobile -->
       <button class="sm:hidden focus:outline-none" aria-label="Buscar">
@@ -393,32 +402,38 @@
         
         <!-- Color Selection -->
         <div id="detail-color-section" class="mb-4">
-          <label class="block text-sm font-medium mb-2">Color:</label>
-          <div id="detail-colors" class="flex space-x-2 flex-wrap">
-            <!-- Colors will be inserted dynamically -->
+          <span id="color-label" class="block text-sm font-medium mb-2">Color:</span>
+          <div id="detail-colors" class="flex space-x-2 flex-wrap" role="radiogroup" aria-labelledby="color-label">
+            <!-- Botones de color generados dinámicamente con role="radio" y aria-checked="true|false" -->
           </div>
           <p class="text-sm text-gray-600 mt-1" id="detail-selected-color">Selecciona un color</p>
         </div>
+
         
         <!-- Size Selection -->
         <div id="detail-size-section" class="mb-4">
-          <label class="block text-sm font-medium mb-2">Talla:</label>
-          <div id="detail-sizes" class="flex space-x-2 flex-wrap">
-            <!-- Sizes will be inserted dynamically -->
+          <span id="size-label" class="block text-sm font-medium mb-2">Talla:</span>
+          <div id="detail-sizes" class="flex space-x-2 flex-wrap" role="radiogroup" aria-labelledby="size-label">
+            <!-- Botones de talla generados dinámicamente con role="radio" y aria-checked="true|false" -->
           </div>
           <p class="text-sm text-gray-600 mt-1" id="detail-selected-size">Selecciona una talla</p>
         </div>
+
         
         <!-- Quantity -->
         <div class="mb-6">
-          <label class="block text-sm font-medium mb-2">Cantidad:</label>
+          <label for="quantity-input" class="block text-sm font-medium mb-2">Cantidad:</label>
           <div class="flex items-center space-x-3">
-            <button id="detail-qty-decrease" class="px-3 py-1 border border-gray-300 hover:bg-gray-100 transition-colors">-</button>
-            <span id="detail-quantity" class="px-4 py-1 border border-gray-300 min-w-[3rem] text-center">1</span>
-            <button id="detail-qty-increase" class="px-3 py-1 border border-gray-300 hover:bg-gray-100 transition-colors">+</button>
+            <button id="detail-qty-decrease" type="button" aria-label="Disminuir cantidad"
+              class="px-3 py-1 border border-gray-300 hover:bg-gray-100 transition-colors">-</button>
+            <input id="quantity-input" name="quantity" type="number" value="1" readonly
+              class="px-4 py-1 border border-gray-300 min-w-[3rem] text-center" />
+            <button id="detail-qty-increase" type="button" aria-label="Aumentar cantidad"
+              class="px-3 py-1 border border-gray-300 hover:bg-gray-100 transition-colors">+</button>
           </div>
           <p id="detail-stock" class="text-sm text-gray-600 mt-1"></p>
         </div>
+
         
         <!-- Action Buttons -->
         <div class="space-y-3">
@@ -454,7 +469,7 @@
       <div>
         <h3 class="uppercase font-semibold mb-5 tracking-wide text-gray-400">Medios de pago</h3>
         <div class="flex items-center space-x-4 mb-6">
-          <img src="../assets/icons/mercado-pago-logo.svg" class="h-10 w-auto object-contain" />
+          <img src="assets/icons/mercado-pago-logo.svg" class="h-10 w-auto object-contain" />
           <button class="border border-white py-1 px-4 text-white text-xs uppercase tracking-wider hover:bg-white hover:text-gray-900 transition rounded">Efectivo</button>
         </div>
         <h3 class="uppercase font-semibold mb-3 tracking-wide text-gray-400">Medios de envío</h3>
@@ -517,7 +532,8 @@
     </svg>
   </a>
 
-   <script type="module" src="js/main.js"></script>
+   <script type="module" src="/js/main.js"></script>
+   <script src="js/firebase.js"></script>
    
 
   

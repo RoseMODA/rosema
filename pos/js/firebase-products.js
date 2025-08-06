@@ -3,6 +3,8 @@
  * CRUD completo para productos con Firebase Storage para imágenes
  * Usando Firebase compat API
  */
+import { db } from './firebase.js';
+// y luego usás db directamente
 
 /**
  * Sube una imagen a Firebase Storage
