@@ -1,7 +1,3 @@
-/**
- * POS Productos - Gestión completa de productos
- * 
- */
 
 let currentProducts = [];
 let filteredProducts = [];
@@ -557,7 +553,8 @@ async function handleSaveProduct() {
     }
 
     // Obtener archivos de imagen
-    const imageFiles = Array.from(document.getElementById('product-images').files);
+    const imageFiles = selectedImages;
+
     
     // Validar archivos
     for (const file of imageFiles) {
@@ -729,15 +726,18 @@ const previewContainer = document.getElementById('image-preview-container');
 
 let selectedImages = [];
 
-if (selectImagesBtn && imageInput && dropZone) {
+if (selectImagesBtn && imageInput && dropZone && previewContainer) {
+  // Abrir el navegador de archivos al hacer clic en el botón
   selectImagesBtn.addEventListener('click', () => {
     imageInput.click();
   });
 
+  // Cuando se seleccionan imágenes desde el navegador
   imageInput.addEventListener('change', (e) => {
     handleImageFiles(e.target.files);
   });
 
+  // Drag and drop: prevenir comportamiento por defecto y aplicar estilo
   dropZone.addEventListener('dragover', (e) => {
     e.preventDefault();
     dropZone.classList.add('border-blue-500');

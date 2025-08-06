@@ -26,6 +26,9 @@ async function initVentas(container) {
     
     // Renderizar interfaz
     container.innerHTML = createVentasHTML();
+
+    // Aplicar correcciones de ventas (botón producto rápido, variables, etc)
+    applyVentasFixes();
     
     // Configurar event listeners
     setupVentasEvents();
@@ -949,16 +952,6 @@ function printReceipt() {
         }
       </style>
 
-      <!-- Estilos específicos para impresión -->
-      <style>
-        @media print {
-          body {
-            margin: 0;
-            padding: 0;
-            max-width: none;
-          }
-        }
-      </style>
     </head>
 
     <body>
