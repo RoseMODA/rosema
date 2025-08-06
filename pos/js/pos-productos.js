@@ -729,31 +729,33 @@ const previewContainer = document.getElementById('image-preview-container');
 
 let selectedImages = [];
 
-selectImagesBtn.addEventListener('click', () => {
-  imageInput.click();
-});
+if (selectImagesBtn && imageInput && dropZone) {
+  selectImagesBtn.addEventListener('click', () => {
+    imageInput.click();
+  });
 
-imageInput.addEventListener('change', (e) => {
-  handleImageFiles(e.target.files);
-});
+  imageInput.addEventListener('change', (e) => {
+    handleImageFiles(e.target.files);
+  });
 
-dropZone.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  dropZone.classList.add('border-blue-500');
-});
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('border-blue-500');
+  });
 
-dropZone.addEventListener('dragleave', () => {
-  dropZone.classList.remove('border-blue-500');
-});
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('border-blue-500');
+  });
 
-dropZone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  dropZone.classList.remove('border-blue-500');
-  handleImageFiles(e.dataTransfer.files);
-});
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('border-blue-500');
+    handleImageFiles(e.dataTransfer.files);
+  });
+}
 
 function handleImageFiles(files) {
-  previewContainer.innerHTML = ''; // limpiar previews anteriores
+  previewContainer.innerHTML = '';
   selectedImages = [];
 
   for (let file of files) {
