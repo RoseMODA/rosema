@@ -8,6 +8,10 @@ let allProducts = [];
 let currentCustomer = null;
 let currentDiscount = 0;
 
+import { getProducts } from "./firebase-products.js";
+import { db } from "./firebase.js";
+import { collection, getDocs, orderBy, query, limit } from "firebase/firestore";
+
 /**
  * Inicializa la página de ventas
  */
@@ -23,23 +27,22 @@ async function initVentas(container) {
 
     // Cargar productos
     allProducts = await getProducts();
-    
+
     // Renderizar interfaz
     container.innerHTML = createVentasHTML();
 
     // Aplicar correcciones de ventas (botón producto rápido, variables, etc)
     applyVentasFixes();
-    
+
     // Configurar event listeners
     setupVentasEvents();
-    
+
     // Cargar ventas recientes
     await loadRecentSales();
-    
   } catch (error) {
-    console.error('❌ Error al cargar ventas:', error);
-    showNotification('Error al cargar el sistema de ventas', 'error');
-    
+    console.error("❌ Error al cargar ventas:", error);
+    showNotification("Error al cargar el sistema de ventas", "error");
+
     container.innerHTML = `
       <div class="text-center py-12">
         <h3 class="text-xl font-semibold text-red-600 mb-2">Error al cargar ventas</h3>
@@ -49,6 +52,30 @@ async function initVentas(container) {
         </button>
       </div>
     `;
+  }
+}
+
+/**
+ * Carga las ventas recientes
+ */
+async function loadRecentSales() {
+  try {
+    const salesRef = collection(db, "sales");
+    const q = query(salesRef, orderBy("createdAt", "desc"), limit(10));
+    const salesSnapshot = await getDocs(q);
+
+    const sales = [];
+    salesSnapshot.forEach((doc) => {
+      sales.push({
+        id: doc.id,
+        ...doc.data(),
+      });
+    });
+
+    renderSalesTable(sales);
+  } catch (error) {
+    console.error("❌ Error al cargar ventas:", error);
+    showNotification("Error al cargar las ventas", "error");
   }
 }
 
@@ -350,59 +377,59 @@ function createVentasHTML() {
  */
 function setupVentasEvents() {
   // Búsqueda de productos con debounce
-  const productSearch = document.getElementById('product-search');
+  const productSearch = document.getElementById("product-search");
   if (productSearch) {
-    productSearch.addEventListener('input', debounce(handleProductSearch, 300));
-    productSearch.addEventListener('keydown', handleBarcodeInput);
+    productSearch.addEventListener("input", debounce(handleProductSearch, 300));
+    productSearch.addEventListener("keydown", handleBarcodeInput);
   }
 
   // Botón nueva venta
-  const btnNuevaVenta = document.getElementById('btn-nueva-venta');
+  const btnNuevaVenta = document.getElementById("btn-nueva-venta");
   if (btnNuevaVenta) {
-    btnNuevaVenta.addEventListener('click', () => {
-      document.getElementById('product-search').focus();
+    btnNuevaVenta.addEventListener("click", () => {
+      document.getElementById("product-search").focus();
     });
   }
 
   // Botón finalizar venta
-  const btnFinishSale = document.getElementById('btn-finish-sale');
+  const btnFinishSale = document.getElementById("btn-finish-sale");
   if (btnFinishSale) {
-    btnFinishSale.addEventListener('click', handleFinishSale);
+    btnFinishSale.addEventListener("click", handleFinishSale);
   }
 
   // Botón limpiar venta
-  const btnClearSale = document.getElementById('btn-clear-sale');
+  const btnClearSale = document.getElementById("btn-clear-sale");
   if (btnClearSale) {
-    btnClearSale.addEventListener('click', handleClearSale);
+    btnClearSale.addEventListener("click", handleClearSale);
   }
 
   // Botón aplicar descuento
-  const btnDescuento = document.getElementById('btn-descuento');
+  const btnDescuento = document.getElementById("btn-descuento");
   if (btnDescuento) {
-    btnDescuento.addEventListener('click', handleApplyDiscount);
+    btnDescuento.addEventListener("click", handleApplyDiscount);
   }
 
   // Modal de recibo
-  const btnCloseReceipt = document.getElementById('btn-close-receipt');
-  const btnPrintReceipt = document.getElementById('btn-print-receipt');
-  
+  const btnCloseReceipt = document.getElementById("btn-close-receipt");
+  const btnPrintReceipt = document.getElementById("btn-print-receipt");
+
   if (btnCloseReceipt) {
-    btnCloseReceipt.addEventListener('click', closeReceiptModal);
+    btnCloseReceipt.addEventListener("click", closeReceiptModal);
   }
-  
+
   if (btnPrintReceipt) {
-    btnPrintReceipt.addEventListener('click', printReceipt);
+    btnPrintReceipt.addEventListener("click", printReceipt);
   }
 
   // Botón exportar lista
-  const btnExportarLista = document.getElementById('btn-exportar-lista');
+  const btnExportarLista = document.getElementById("btn-exportar-lista");
   if (btnExportarLista) {
-    btnExportarLista.addEventListener('click', handleExportSales);
+    btnExportarLista.addEventListener("click", handleExportSales);
   }
 
   // Cerrar modal al hacer click fuera
-  document.getElementById('receipt-modal')?.addEventListener('click', (e) => {
-    if (e.target.id === 'receipt-modal') {
+  document.getElementById("receipt-modal")?.addEventListener("click", (e) => {
+    if (e.target.id === "receipt-modal") {
       closeReceiptModal();
     }
   });
@@ -413,53 +440,79 @@ function setupVentasEvents() {
  */
 function handleProductSearch(e) {
   const searchTerm = e.target.value.toLowerCase().trim();
-  const resultsContainer = document.getElementById('search-results');
-  const resultsList = document.getElementById('search-results-list');
-  
-  if (searchTerm === '') {
-    resultsContainer.classList.add('hidden');
+  const resultsContainer = document.getElementById("search-results");
+  const resultsList = document.getElementById("search-results-list");
+
+  if (searchTerm === "") {
+    resultsContainer.classList.add("hidden");
     return;
   }
 
   // Buscar productos
-  const matchingProducts = allProducts.filter(product => 
-    product.name.toLowerCase().includes(searchTerm) ||
-    (product.sku && product.sku.toLowerCase().includes(searchTerm)) ||
-    (product.tags && Array.isArray(product.tags) && product.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
-  ).slice(0, 5); // Limitar a 5 resultados
+  const matchingProducts = allProducts
+    .filter(
+      (product) =>
+        product.name.toLowerCase().includes(searchTerm) ||
+        (product.sku && product.sku.toLowerCase().includes(searchTerm)) ||
+        (product.tags &&
+          Array.isArray(product.tags) &&
+          product.tags.some((tag) => tag.toLowerCase().includes(searchTerm)))
+    )
+    .slice(0, 5); // Limitar a 5 resultados
 
   if (matchingProducts.length > 0) {
-    resultsContainer.classList.remove('hidden');
-    resultsList.innerHTML = matchingProducts.map(product => `
-      <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer product-search-result" data-product-id="${product.id}" onclick="addProductToSale('${product.id}')">
+    resultsContainer.classList.remove("hidden");
+    resultsList.innerHTML = matchingProducts
+      .map(
+        (product) => `
+      <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer product-search-result" data-product-id="${
+        product.id
+      }" onclick="addProductToSale('${product.id}')">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 bg-gray-200 rounded flex items-center justify-center">
-            ${product.images && product.images.length > 0 ? 
-              `<img src="${product.images[0]}" alt="${sanitizeText(product.name)}" class="w-10 h-10 object-cover rounded" onerror="this.parentElement.innerHTML='<span class=\\'text-xs text-gray-500\\'>📦</span>'">` :
-              `<span class="text-xs text-gray-500">📦</span>`
+            ${
+              product.images && product.images.length > 0
+                ? `<img src="${product.images[0]}" alt="${sanitizeText(
+                    product.name
+                  )}" class="w-10 h-10 object-cover rounded" onerror="this.parentElement.innerHTML='<span class=\\'text-xs text-gray-500\\'>📦</span>'">`
+                : `<span class="text-xs text-gray-500">📦</span>`
             }
           </div>
           <div>
             <p class="font-medium text-sm">${sanitizeText(product.name)}</p>
-            <p class="text-xs text-gray-500">${product.sku || 'Sin SKU'} • Stock: ${product.stock || 0}</p>
-            ${(product.stock || 0) <= 5 ? '<p class="text-xs text-red-500">Stock bajo</p>' : ''}
+            <p class="text-xs text-gray-500">${
+              product.sku || "Sin SKU"
+            } • Stock: ${product.stock || 0}</p>
+            ${
+              (product.stock || 0) <= 5
+                ? '<p class="text-xs text-red-500">Stock bajo</p>'
+                : ""
+            }
           </div>
         </div>
         <div class="text-right">
           <p class="font-semibold">${formatCurrency(product.price || 0)}</p>
-          ${product.originalPrice ? `<p class="text-xs text-gray-500 line-through">${formatCurrency(product.originalPrice)}</p>` : ''}
+          ${
+            product.originalPrice
+              ? `<p class="text-xs text-gray-500 line-through">${formatCurrency(
+                  product.originalPrice
+                )}</p>`
+              : ""
+          }
         </div>
       </div>
-    `).join('');
+    `
+      )
+      .join("");
   } else {
-    resultsContainer.classList.add('hidden');
+    resultsContainer.classList.add("hidden");
     resultsList.innerHTML = `
       <div class="p-3 text-center text-gray-500">
         <p class="text-sm">No se encontraron productos</p>
         <p class="text-xs">Intenta con otro término de búsqueda</p>
       </div>
     `;
-    resultsContainer.classList.remove('hidden');
+    resultsContainer.classList.remove("hidden");
   }
 }
 
@@ -467,30 +520,37 @@ function handleProductSearch(e) {
  * Maneja la entrada de código de barras
  */
 function handleBarcodeInput(e) {
-  if (e.key === 'Enter') {
+  if (e.key === "Enter") {
     e.preventDefault();
     const searchTerm = e.target.value.trim();
-    
+
     if (searchTerm) {
       // Buscar producto por SKU exacto o nombre
-      let product = allProducts.find(p => p.sku === searchTerm);
-      
+      let product = allProducts.find((p) => p.sku === searchTerm);
+
       // Si no se encuentra por SKU, buscar por nombre exacto
       if (!product) {
-        product = allProducts.find(p => p.name.toLowerCase() === searchTerm.toLowerCase());
+        product = allProducts.find(
+          (p) => p.name.toLowerCase() === searchTerm.toLowerCase()
+        );
       }
-      
+
       // Si no se encuentra, buscar por nombre parcial
       if (!product) {
-        product = allProducts.find(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        product = allProducts.find((p) =>
+          p.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
       }
-      
+
       if (product) {
         addProductToSale(product.id);
-        e.target.value = '';
-        document.getElementById('search-results').classList.add('hidden');
+        e.target.value = "";
+        document.getElementById("search-results").classList.add("hidden");
       } else {
-        showNotification(`No se encontró producto con: "${searchTerm}"`, 'warning');
+        showNotification(
+          `No se encontró producto con: "${searchTerm}"`,
+          "warning"
+        );
       }
     }
   }
@@ -501,36 +561,46 @@ function handleBarcodeInput(e) {
  */
 function addProductToSale(productId) {
   try {
-    console.log('🛒 Agregando producto a la venta:', productId);
-    
+    console.log("🛒 Agregando producto a la venta:", productId);
+
     // Asegurar que productId sea string para comparación consistente
     const searchId = String(productId);
-    const product = allProducts.find(p => String(p.id) === searchId);
-    
+    const product = allProducts.find((p) => String(p.id) === searchId);
+
     if (!product) {
-      console.error('❌ Producto no encontrado:', productId);
-      console.log('📋 Productos disponibles:', allProducts.map(p => ({ id: p.id, name: p.name })));
-      showNotification('Producto no encontrado en el inventario', 'error');
+      console.error("❌ Producto no encontrado:", productId);
+      console.log(
+        "📋 Productos disponibles:",
+        allProducts.map((p) => ({ id: p.id, name: p.name }))
+      );
+      showNotification("Producto no encontrado en el inventario", "error");
       return;
     }
 
-    console.log('✅ Producto encontrado:', product.name);
+    console.log("✅ Producto encontrado:", product.name);
 
     if ((product.stock || 0) <= 0) {
-      showNotification(`${product.name} sin stock disponible`, 'warning');
+      showNotification(`${product.name} sin stock disponible`, "warning");
       return;
     }
 
     // Verificar si ya está en el carrito
-    const existingItem = currentSaleCart.find(item => String(item.productId) === searchId);
-    
+    const existingItem = currentSaleCart.find(
+      (item) => String(item.productId) === searchId
+    );
+
     if (existingItem) {
       if (existingItem.quantity >= product.stock) {
-        showNotification(`No hay más stock disponible para ${product.name}`, 'warning');
+        showNotification(
+          `No hay más stock disponible para ${product.name}`,
+          "warning"
+        );
         return;
       }
       existingItem.quantity++;
-      console.log(`✅ Cantidad actualizada para ${product.name}: ${existingItem.quantity}`);
+      console.log(
+        `✅ Cantidad actualizada para ${product.name}: ${existingItem.quantity}`
+      );
     } else {
       const newItem = {
         id: generateId(),
@@ -539,31 +609,33 @@ function addProductToSale(productId) {
         price: product.price || 0,
         originalPrice: product.originalPrice,
         sku: product.sku,
-        image: product.images && product.images.length > 0 ? product.images[0] : null,
+        image:
+          product.images && product.images.length > 0
+            ? product.images[0]
+            : null,
         quantity: 1,
         maxStock: product.stock || 0,
-        category: product.category
+        category: product.category,
       };
-      
+
       currentSaleCart.push(newItem);
-      console.log('✅ Nuevo producto agregado al carrito:', newItem);
+      console.log("✅ Nuevo producto agregado al carrito:", newItem);
     }
 
     renderSaleCart();
     updateSaleTotals();
-    
+
     // Limpiar búsqueda
-    const searchInput = document.getElementById('product-search');
-    const searchResults = document.getElementById('search-results');
-    
-    if (searchInput) searchInput.value = '';
-    if (searchResults) searchResults.classList.add('hidden');
-    
-    showNotification(`${product.name} agregado a la venta`, 'success');
-    
+    const searchInput = document.getElementById("product-search");
+    const searchResults = document.getElementById("search-results");
+
+    if (searchInput) searchInput.value = "";
+    if (searchResults) searchResults.classList.add("hidden");
+
+    showNotification(`${product.name} agregado a la venta`, "success");
   } catch (error) {
-    console.error('❌ Error al agregar producto a la venta:', error);
-    showNotification('Error al agregar producto a la venta', 'error');
+    console.error("❌ Error al agregar producto a la venta:", error);
+    showNotification("Error al agregar producto a la venta", "error");
   }
 }
 
@@ -571,13 +643,13 @@ function addProductToSale(productId) {
  * Renderiza el carrito de venta
  */
 function renderSaleCart() {
-  const container = document.getElementById('sale-cart-items');
-  
+  const container = document.getElementById("sale-cart-items");
+
   if (!container) {
-    console.error('❌ Contenedor sale-cart-items no encontrado');
+    console.error("❌ Contenedor sale-cart-items no encontrado");
     return;
   }
-  
+
   if (currentSaleCart.length === 0) {
     container.innerHTML = `
       <div class="text-center text-gray-500 py-8">
@@ -589,34 +661,55 @@ function renderSaleCart() {
     return;
   }
 
-  container.innerHTML = currentSaleCart.map(item => `
+  container.innerHTML = currentSaleCart
+    .map(
+      (item) => `
     <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg mb-2">
       <div class="flex items-center space-x-3 flex-1">
         <div class="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-          ${item.image ? 
-            `<img src="${item.image}" alt="${sanitizeText(item.name)}" class="w-12 h-12 object-cover rounded" onerror="this.parentElement.innerHTML='<span class=\\'text-xs text-gray-500\\'>📦</span>'">` :
-            `<span class="text-xs text-gray-500">📦</span>`
+          ${
+            item.image
+              ? `<img src="${item.image}" alt="${sanitizeText(
+                  item.name
+                )}" class="w-12 h-12 object-cover rounded" onerror="this.parentElement.innerHTML='<span class=\\'text-xs text-gray-500\\'>📦</span>'">`
+              : `<span class="text-xs text-gray-500">📦</span>`
           }
         </div>
         <div class="flex-1">
           <p class="font-medium text-sm">${sanitizeText(item.name)}</p>
-          <p class="text-xs text-gray-500">${item.sku || 'Sin SKU'}</p>
+          <p class="text-xs text-gray-500">${item.sku || "Sin SKU"}</p>
           <p class="text-sm font-semibold">${formatCurrency(item.price)}</p>
-          ${item.originalPrice ? `<p class="text-xs text-gray-400 line-through">${formatCurrency(item.originalPrice)}</p>` : ''}
+          ${
+            item.originalPrice
+              ? `<p class="text-xs text-gray-400 line-through">${formatCurrency(
+                  item.originalPrice
+                )}</p>`
+              : ""
+          }
         </div>
       </div>
       
       <div class="flex items-center space-x-2">
-        <button onclick="updateSaleItemQuantity('${item.id}', ${item.quantity - 1})" 
-                class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 ${item.quantity <= 1 ? 'opacity-50 cursor-not-allowed' : ''}" 
-                ${item.quantity <= 1 ? 'disabled' : ''}
+        <button onclick="updateSaleItemQuantity('${item.id}', ${
+        item.quantity - 1
+      })" 
+                class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 ${
+                  item.quantity <= 1 ? "opacity-50 cursor-not-allowed" : ""
+                }" 
+                ${item.quantity <= 1 ? "disabled" : ""}
                 title="Disminuir cantidad">
           -
         </button>
         <span class="w-8 text-center font-medium">${item.quantity}</span>
-        <button onclick="updateSaleItemQuantity('${item.id}', ${item.quantity + 1})" 
-                class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 ${item.quantity >= item.maxStock ? 'opacity-50 cursor-not-allowed' : ''}" 
-                ${item.quantity >= item.maxStock ? 'disabled' : ''}
+        <button onclick="updateSaleItemQuantity('${item.id}', ${
+        item.quantity + 1
+      })" 
+                class="w-8 h-8 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-50 ${
+                  item.quantity >= item.maxStock
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }" 
+                ${item.quantity >= item.maxStock ? "disabled" : ""}
                 title="Aumentar cantidad">
           +
         </button>
@@ -627,8 +720,10 @@ function renderSaleCart() {
         </button>
       </div>
     </div>
-  `).join('');
-  
+  `
+    )
+    .join("");
+
   console.log(`🛒 Carrito renderizado con ${currentSaleCart.length} productos`);
 }
 
@@ -641,11 +736,11 @@ function updateSaleItemQuantity(itemId, newQuantity) {
     return;
   }
 
-  const item = currentSaleCart.find(i => i.id === itemId);
+  const item = currentSaleCart.find((i) => i.id === itemId);
   if (!item) return;
 
   if (newQuantity > item.maxStock) {
-    showNotification('No hay suficiente stock disponible', 'warning');
+    showNotification("No hay suficiente stock disponible", "warning");
     return;
   }
 
@@ -658,7 +753,7 @@ function updateSaleItemQuantity(itemId, newQuantity) {
  * Remueve un item de la venta
  */
 function removeSaleItem(itemId) {
-  currentSaleCart = currentSaleCart.filter(item => item.id !== itemId);
+  currentSaleCart = currentSaleCart.filter((item) => item.id !== itemId);
   renderSaleCart();
   updateSaleTotals();
 }
@@ -667,17 +762,27 @@ function removeSaleItem(itemId) {
  * Actualiza los totales de la venta
  */
 function updateSaleTotals() {
-  const subtotal = currentSaleCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const subtotal = currentSaleCart.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
   const total = subtotal - currentDiscount;
-  const itemsCount = currentSaleCart.reduce((sum, item) => sum + item.quantity, 0);
+  const itemsCount = currentSaleCart.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
 
-  document.getElementById('sale-subtotal').textContent = formatCurrency(subtotal);
-  document.getElementById('sale-discount').textContent = formatCurrency(currentDiscount);
-  document.getElementById('sale-total').textContent = formatCurrency(Math.max(0, total));
-  document.getElementById('sale-items-count').textContent = itemsCount;
+  document.getElementById("sale-subtotal").textContent =
+    formatCurrency(subtotal);
+  document.getElementById("sale-discount").textContent =
+    formatCurrency(currentDiscount);
+  document.getElementById("sale-total").textContent = formatCurrency(
+    Math.max(0, total)
+  );
+  document.getElementById("sale-items-count").textContent = itemsCount;
 
   // Habilitar/deshabilitar botón de finalizar venta
-  const finishBtn = document.getElementById('btn-finish-sale');
+  const finishBtn = document.getElementById("btn-finish-sale");
   finishBtn.disabled = currentSaleCart.length === 0;
 }
 
@@ -687,43 +792,54 @@ function updateSaleTotals() {
 async function handleFinishSale() {
   try {
     if (currentSaleCart.length === 0) {
-      showNotification('No hay productos en la venta', 'warning');
+      showNotification("No hay productos en la venta", "warning");
       return;
     }
 
-    const finishBtn = document.getElementById('btn-finish-sale');
+    const finishBtn = document.getElementById("btn-finish-sale");
     finishBtn.disabled = true;
-    finishBtn.textContent = 'Procesando...';
+    finishBtn.textContent = "Procesando...";
 
     // Preparar datos de la venta
     const saleData = {
       saleNumber: generateSaleNumber(),
-      customerName: document.getElementById('customer-name').value.trim() || 'Cliente General',
-      items: currentSaleCart.map(item => ({
+      customerName:
+        document.getElementById("customer-name").value.trim() ||
+        "Cliente General",
+      items: currentSaleCart.map((item) => ({
         productId: item.productId,
         name: item.name,
         sku: item.sku,
         price: item.price,
         quantity: item.quantity,
-        subtotal: item.price * item.quantity
+        subtotal: item.price * item.quantity,
       })),
-      subtotal: currentSaleCart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+      subtotal: currentSaleCart.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+      ),
       discount: currentDiscount,
-      total: Math.max(0, currentSaleCart.reduce((sum, item) => sum + (item.price * item.quantity), 0) - currentDiscount),
-      paymentMethod: document.getElementById('payment-method').value,
+      total: Math.max(
+        0,
+        currentSaleCart.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0
+        ) - currentDiscount
+      ),
+      paymentMethod: document.getElementById("payment-method").value,
       createdAt: new Date().toISOString(),
-      status: 'completed'
+      status: "completed",
     };
 
     // Guardar venta en Firebase
     const db = window.firebaseDB();
     if (db) {
-      const docRef = await db.collection('sales').add(saleData);
-      console.log('✅ Venta guardada con ID:', docRef.id);
+      const docRef = await db.collection("sales").add(saleData);
+      console.log("✅ Venta guardada con ID:", docRef.id);
 
       // Actualizar stock de productos
       for (const item of currentSaleCart) {
-        const product = allProducts.find(p => p.id === item.productId);
+        const product = allProducts.find((p) => p.id === item.productId);
         if (product) {
           const newStock = (product.stock || 0) - item.quantity;
           await updateProductStock(item.productId, Math.max(0, newStock));
@@ -736,16 +852,15 @@ async function handleFinishSale() {
 
     // Limpiar venta
     handleClearSale();
-    
-    showNotification('Venta completada exitosamente', 'success');
 
+    showNotification("Venta completada exitosamente", "success");
   } catch (error) {
-    console.error('❌ Error al finalizar venta:', error);
-    showNotification('Error al procesar la venta', 'error');
+    console.error("❌ Error al finalizar venta:", error);
+    showNotification("Error al procesar la venta", "error");
   } finally {
-    const finishBtn = document.getElementById('btn-finish-sale');
+    const finishBtn = document.getElementById("btn-finish-sale");
     finishBtn.disabled = false;
-    finishBtn.textContent = 'FINALIZAR VENTA';
+    finishBtn.textContent = "FINALIZAR VENTA";
   }
 }
 
@@ -756,10 +871,10 @@ function handleClearSale() {
   currentSaleCart = [];
   currentCustomer = null;
   currentDiscount = 0;
-  document.getElementById('customer-name').value = '';
-  document.getElementById('payment-method').value = 'efectivo';
-  document.getElementById('descuento').value = '';
-  document.getElementById('discount-type').value = 'amount';
+  document.getElementById("customer-name").value = "";
+  document.getElementById("payment-method").value = "efectivo";
+  document.getElementById("descuento").value = "";
+  document.getElementById("discount-type").value = "amount";
   renderSaleCart();
   updateSaleTotals();
 }
@@ -769,37 +884,45 @@ function handleClearSale() {
  */
 function handleApplyDiscount() {
   try {
-    const discountInput = document.getElementById('descuento');
-    const discountType = document.getElementById('discount-type');
+    const discountInput = document.getElementById("descuento");
+    const discountType = document.getElementById("discount-type");
     const discountValue = parseFloat(discountInput.value) || 0;
-    
+
     if (discountValue < 0) {
-      showNotification('El descuento no puede ser negativo', 'error');
+      showNotification("El descuento no puede ser negativo", "error");
       return;
     }
 
-    const subtotal = currentSaleCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    
-    if (discountType.value === 'percentage') {
+    const subtotal = currentSaleCart.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+
+    if (discountType.value === "percentage") {
       if (discountValue > 100) {
-        showNotification('El descuento no puede ser mayor al 100%', 'error');
+        showNotification("El descuento no puede ser mayor al 100%", "error");
         return;
       }
       currentDiscount = (subtotal * discountValue) / 100;
     } else {
       if (discountValue > subtotal) {
-        showNotification('El descuento no puede ser mayor al subtotal', 'error');
+        showNotification(
+          "El descuento no puede ser mayor al subtotal",
+          "error"
+        );
         return;
       }
       currentDiscount = discountValue;
     }
 
     updateSaleTotals();
-    showNotification(`Descuento de ${formatCurrency(currentDiscount)} aplicado`, 'success');
-    
+    showNotification(
+      `Descuento de ${formatCurrency(currentDiscount)} aplicado`,
+      "success"
+    );
   } catch (error) {
-    console.error('❌ Error al aplicar descuento:', error);
-    showNotification('Error al aplicar descuento', 'error');
+    console.error("❌ Error al aplicar descuento:", error);
+    showNotification("Error al aplicar descuento", "error");
   }
 }
 
@@ -809,10 +932,10 @@ function handleApplyDiscount() {
 function generateSaleNumber() {
   const now = new Date();
   const year = now.getFullYear().toString().slice(-2);
-  const month = (now.getMonth() + 1).toString().padStart(2, '0');
-  const day = now.getDate().toString().padStart(2, '0');
+  const month = (now.getMonth() + 1).toString().padStart(2, "0");
+  const day = now.getDate().toString().padStart(2, "0");
   const time = now.getTime().toString().slice(-4);
-  
+
   return `#${year}${month}${day}${time}`;
 }
 
@@ -820,19 +943,19 @@ function generateSaleNumber() {
  * Muestra el modal del recibo
  */
 function showReceiptModal(saleData) {
-  const modal = document.getElementById('receipt-modal');
-  const content = document.getElementById('receipt-content');
-  
+  const modal = document.getElementById("receipt-modal");
+  const content = document.getElementById("receipt-content");
+
   content.innerHTML = createReceiptHTML(saleData);
-  modal.classList.remove('hidden');
+  modal.classList.remove("hidden");
 }
 
 /**
  * Cierra el modal del recibo
  */
 function closeReceiptModal() {
-  const modal = document.getElementById('receipt-modal');
-  modal.classList.add('hidden');
+  const modal = document.getElementById("receipt-modal");
+  modal.classList.add("hidden");
 }
 
 /**
@@ -860,17 +983,23 @@ function createReceiptHTML(saleData) {
     </div>
     
     <div class="space-y-2 mb-4">
-      ${saleData.items.map(item => `
+      ${saleData.items
+        .map(
+          (item) => `
         <div class="flex justify-between text-sm">
           <div class="flex-1">
             <p class="font-medium">${item.name}</p>
-            <p class="text-gray-500">${item.quantity} x ${formatCurrency(item.price)}</p>
+            <p class="text-gray-500">${item.quantity} x ${formatCurrency(
+            item.price
+          )}</p>
           </div>
           <div class="text-right">
             <p class="font-medium">${formatCurrency(item.subtotal)}</p>
           </div>
         </div>
-      `).join('')}
+      `
+        )
+        .join("")}
     </div>
     
     <div class="border-t border-gray-300 pt-2">
@@ -878,18 +1007,25 @@ function createReceiptHTML(saleData) {
         <span>Subtotal:</span>
         <span>${formatCurrency(saleData.subtotal)}</span>
       </div>
-      ${saleData.discount > 0 ? `
+      ${
+        saleData.discount > 0
+          ? `
         <div class="flex justify-between text-sm text-green-600">
           <span>Descuento:</span>
           <span>- ${formatCurrency(saleData.discount)}</span>
         </div>
-      ` : ''}
+      `
+          : ""
+      }
       <div class="flex justify-between font-semibold border-t mt-2 pt-2">
         <span>TOTAL:</span>
         <span>${formatCurrency(saleData.total)}</span>
       </div>
       <div class="text-sm text-gray-600 mt-1">
-        Pago: ${saleData.paymentMethod.charAt(0).toUpperCase() + saleData.paymentMethod.slice(1)}
+        Pago: ${
+          saleData.paymentMethod.charAt(0).toUpperCase() +
+          saleData.paymentMethod.slice(1)
+        }
       </div>
     </div>
 
@@ -906,9 +1042,9 @@ function createReceiptHTML(saleData) {
  * Imprime el recibo
  */
 function printReceipt() {
-  const receiptContent = document.getElementById('receipt-content').innerHTML;
-  
-  const printWindow = window.open('', '_blank');
+  const receiptContent = document.getElementById("receipt-content").innerHTML;
+
+  const printWindow = window.open("", "_blank");
   printWindow.document.write(`
     <!DOCTYPE html>
     <html lang="es">
@@ -969,10 +1105,10 @@ function printReceipt() {
     </html>
 
   `);
-  
+
   printWindow.document.close();
   printWindow.focus();
-  
+
   setTimeout(() => {
     printWindow.print();
     printWindow.close();
@@ -986,28 +1122,28 @@ async function loadRecentSales() {
   try {
     const db = window.firebaseDB();
     if (!db) {
-      console.warn('Firebase no disponible para cargar ventas');
+      console.warn("Firebase no disponible para cargar ventas");
       return;
     }
 
-    const salesSnapshot = await db.collection('sales')
-      .orderBy('createdAt', 'desc')
+    const salesSnapshot = await db
+      .collection("sales")
+      .orderBy("createdAt", "desc")
       .limit(10)
       .get();
-    
+
     const sales = [];
     salesSnapshot.forEach((doc) => {
       sales.push({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       });
     });
-    
+
     renderSalesTable(sales);
-    
   } catch (error) {
-    console.error('❌ Error al cargar ventas:', error);
-    showNotification('Error al cargar las ventas', 'error');
+    console.error("❌ Error al cargar ventas:", error);
+    showNotification("Error al cargar las ventas", "error");
   }
 }
 
@@ -1015,9 +1151,9 @@ async function loadRecentSales() {
  * Renderiza la tabla de ventas
  */
 function renderSalesTable(sales) {
-  const tbody = document.getElementById('sales-table-body');
-  const countElement = document.getElementById('sales-count');
-  
+  const tbody = document.getElementById("sales-table-body");
+  const countElement = document.getElementById("sales-count");
+
   if (!tbody) return;
 
   countElement.textContent = sales.length;
@@ -1034,49 +1170,68 @@ function renderSalesTable(sales) {
     return;
   }
 
-  tbody.innerHTML = sales.map(sale => `
+  tbody.innerHTML = sales
+    .map(
+      (sale) => `
     <tr class="hover:bg-gray-50">
       <td class="px-6 py-4 whitespace-nowrap">
-        <input type="checkbox" class="sale-checkbox rounded border-gray-300" data-id="${sale.id}">
+        <input type="checkbox" class="sale-checkbox rounded border-gray-300" data-id="${
+          sale.id
+        }">
       </td>
       <td class="px-6 py-4 whitespace-nowrap">
         <div class="text-sm font-medium text-blue-600">${sale.saleNumber}</div>
       </td>
       <td class="px-6 py-4 whitespace-nowrap">
-        <div class="text-sm text-gray-900">${formatDateTime(sale.createdAt)}</div>
+        <div class="text-sm text-gray-900">${formatDateTime(
+          sale.createdAt
+        )}</div>
       </td>
       <td class="px-6 py-4 whitespace-nowrap">
         <div class="text-sm text-gray-900">${sale.customerName}</div>
       </td>
       <td class="px-6 py-4 whitespace-nowrap">
-        <div class="text-sm font-semibold text-gray-900">${formatCurrency(sale.total)}</div>
+        <div class="text-sm font-semibold text-gray-900">${formatCurrency(
+          sale.total
+        )}</div>
       </td>
       <td class="px-6 py-4 whitespace-nowrap">
         <div class="text-sm text-gray-900">${sale.items.length} unid.</div>
       </td>
       <td class="px-6 py-4 whitespace-nowrap">
         <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-          sale.paymentMethod === 'efectivo' ? 'bg-green-100 text-green-800' :
-          sale.paymentMethod === 'tarjeta' ? 'bg-blue-100 text-blue-800' :
-          sale.paymentMethod === 'transferencia' ? 'bg-purple-100 text-purple-800' :
-          'bg-yellow-100 text-yellow-800'
+          sale.paymentMethod === "efectivo"
+            ? "bg-green-100 text-green-800"
+            : sale.paymentMethod === "tarjeta"
+            ? "bg-blue-100 text-blue-800"
+            : sale.paymentMethod === "transferencia"
+            ? "bg-purple-100 text-purple-800"
+            : "bg-yellow-100 text-yellow-800"
         }">
           ${sale.paymentMethod.toUpperCase()}
         </span>
       </td>
       <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-        <button onclick="viewSaleDetails('${sale.id}')" class="text-blue-600 hover:text-blue-900 mr-3" title="Ver detalles de la venta">
+        <button onclick="viewSaleDetails('${
+          sale.id
+        }')" class="text-blue-600 hover:text-blue-900 mr-3" title="Ver detalles de la venta">
           Ver
         </button>
-        <button onclick="printSaleReceipt('${sale.id}')" class="text-green-600 hover:text-green-900 mr-3" title="Imprimir recibo">
+        <button onclick="printSaleReceipt('${
+          sale.id
+        }')" class="text-green-600 hover:text-green-900 mr-3" title="Imprimir recibo">
           Imprimir
         </button>
-        <button onclick="deleteSaleConfirm('${sale.id}')" class="text-red-600 hover:text-red-900" title="Eliminar venta">
+        <button onclick="deleteSaleConfirm('${
+          sale.id
+        }')" class="text-red-600 hover:text-red-900" title="Eliminar venta">
           Eliminar
         </button>
       </td>
     </tr>
-  `).join('');
+  `
+    )
+    .join("");
 }
 
 // Funciones globales para los botones de la tabla
@@ -1089,30 +1244,29 @@ window.removeSaleItem = removeSaleItem;
  */
 window.viewSaleDetails = async (saleId) => {
   try {
-    console.log('👁️ Viendo detalles de venta:', saleId);
-    
+    console.log("👁️ Viendo detalles de venta:", saleId);
+
     const db = window.firebaseDB();
     if (!db) {
-      showNotification('Firebase no disponible', 'error');
+      showNotification("Firebase no disponible", "error");
       return;
     }
 
     // Obtener datos de la venta
-    const saleDoc = await db.collection('sales').doc(saleId).get();
-    
+    const saleDoc = await db.collection("sales").doc(saleId).get();
+
     if (!saleDoc.exists) {
-      showNotification('Venta no encontrada', 'error');
+      showNotification("Venta no encontrada", "error");
       return;
     }
 
     const saleData = { id: saleDoc.id, ...saleDoc.data() };
-    
+
     // Mostrar modal con detalles
     showSaleDetailsModal(saleData);
-    
   } catch (error) {
-    console.error('❌ Error al cargar detalles de venta:', error);
-    showNotification('Error al cargar detalles de la venta', 'error');
+    console.error("❌ Error al cargar detalles de venta:", error);
+    showNotification("Error al cargar detalles de la venta", "error");
   }
 };
 
@@ -1121,30 +1275,29 @@ window.viewSaleDetails = async (saleId) => {
  */
 window.printSaleReceipt = async (saleId) => {
   try {
-    console.log('🖨️ Imprimiendo recibo de venta:', saleId);
-    
+    console.log("🖨️ Imprimiendo recibo de venta:", saleId);
+
     const db = window.firebaseDB();
     if (!db) {
-      showNotification('Firebase no disponible', 'error');
+      showNotification("Firebase no disponible", "error");
       return;
     }
 
     // Obtener datos de la venta
-    const saleDoc = await db.collection('sales').doc(saleId).get();
-    
+    const saleDoc = await db.collection("sales").doc(saleId).get();
+
     if (!saleDoc.exists) {
-      showNotification('Venta no encontrada', 'error');
+      showNotification("Venta no encontrada", "error");
       return;
     }
 
     const saleData = { id: saleDoc.id, ...saleDoc.data() };
-    
+
     // Crear ventana de impresión
     printSaleReceiptWindow(saleData);
-    
   } catch (error) {
-    console.error('❌ Error al imprimir recibo:', error);
-    showNotification('Error al imprimir recibo', 'error');
+    console.error("❌ Error al imprimir recibo:", error);
+    showNotification("Error al imprimir recibo", "error");
   }
 };
 
@@ -1155,37 +1308,40 @@ window.deleteSaleConfirm = async (saleId) => {
   try {
     const db = window.firebaseDB();
     if (!db) {
-      showNotification('Firebase no disponible', 'error');
+      showNotification("Firebase no disponible", "error");
       return;
     }
 
     // Obtener datos de la venta para mostrar en confirmación
-    const saleDoc = await db.collection('sales').doc(saleId).get();
-    
+    const saleDoc = await db.collection("sales").doc(saleId).get();
+
     if (!saleDoc.exists) {
-      showNotification('Venta no encontrada', 'error');
+      showNotification("Venta no encontrada", "error");
       return;
     }
 
     const saleData = saleDoc.data();
-    const confirmMessage = `¿Estás seguro de eliminar la venta ${saleData.saleNumber}?\n\nCliente: ${saleData.customerName}\nTotal: ${formatCurrency(saleData.total)}\n\nEsta acción no se puede deshacer.`;
-    
+    const confirmMessage = `¿Estás seguro de eliminar la venta ${
+      saleData.saleNumber
+    }?\n\nCliente: ${saleData.customerName}\nTotal: ${formatCurrency(
+      saleData.total
+    )}\n\nEsta acción no se puede deshacer.`;
+
     if (confirm(confirmMessage)) {
-      console.log('🗑️ Eliminando venta:', saleId);
-      
+      console.log("🗑️ Eliminando venta:", saleId);
+
       // Eliminar venta de Firebase
-      await db.collection('sales').doc(saleId).delete();
-      
+      await db.collection("sales").doc(saleId).delete();
+
       // Recargar lista de ventas
       await loadRecentSales();
-      
-      showNotification('Venta eliminada exitosamente', 'success');
-      console.log('✅ Venta eliminada:', saleId);
+
+      showNotification("Venta eliminada exitosamente", "success");
+      console.log("✅ Venta eliminada:", saleId);
     }
-    
   } catch (error) {
-    console.error('❌ Error al eliminar venta:', error);
-    showNotification('Error al eliminar la venta', 'error');
+    console.error("❌ Error al eliminar venta:", error);
+    showNotification("Error al eliminar la venta", "error");
   }
 };
 
@@ -1194,11 +1350,11 @@ window.deleteSaleConfirm = async (saleId) => {
  */
 function showSaleDetailsModal(saleData) {
   // Crear modal si no existe
-  let modal = document.getElementById('sale-details-modal');
+  let modal = document.getElementById("sale-details-modal");
   if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'sale-details-modal';
-    modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 z-50';
+    modal = document.createElement("div");
+    modal.id = "sale-details-modal";
+    modal.className = "fixed inset-0 bg-gray-600 bg-opacity-50 z-50";
     document.body.appendChild(modal);
   }
 
@@ -1219,11 +1375,15 @@ function showSaleDetailsModal(saleData) {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
               <label class="block text-sm font-medium text-gray-700">Número de Venta</label>
-              <p class="text-lg font-semibold text-blue-600">${saleData.saleNumber}</p>
+              <p class="text-lg font-semibold text-blue-600">${
+                saleData.saleNumber
+              }</p>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">Fecha</label>
-              <p class="text-sm text-gray-900">${formatDateTime(saleData.createdAt)}</p>
+              <p class="text-sm text-gray-900">${formatDateTime(
+                saleData.createdAt
+              )}</p>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">Cliente</label>
@@ -1231,7 +1391,9 @@ function showSaleDetailsModal(saleData) {
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">Método de Pago</label>
-              <p class="text-sm text-gray-900 capitalize">${saleData.paymentMethod}</p>
+              <p class="text-sm text-gray-900 capitalize">${
+                saleData.paymentMethod
+              }</p>
             </div>
           </div>
 
@@ -1249,17 +1411,31 @@ function showSaleDetailsModal(saleData) {
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                  ${saleData.items.map(item => `
+                  ${saleData.items
+                    .map(
+                      (item) => `
                     <tr>
                       <td class="px-4 py-2">
-                        <div class="text-sm font-medium text-gray-900">${sanitizeText(item.name)}</div>
-                        <div class="text-xs text-gray-500">${item.sku || 'Sin SKU'}</div>
+                        <div class="text-sm font-medium text-gray-900">${sanitizeText(
+                          item.name
+                        )}</div>
+                        <div class="text-xs text-gray-500">${
+                          item.sku || "Sin SKU"
+                        }</div>
                       </td>
-                      <td class="px-4 py-2 text-sm text-gray-900">${item.quantity}</td>
-                      <td class="px-4 py-2 text-sm text-gray-900">${formatCurrency(item.price)}</td>
-                      <td class="px-4 py-2 text-sm font-medium text-gray-900">${formatCurrency(item.subtotal)}</td>
+                      <td class="px-4 py-2 text-sm text-gray-900">${
+                        item.quantity
+                      }</td>
+                      <td class="px-4 py-2 text-sm text-gray-900">${formatCurrency(
+                        item.price
+                      )}</td>
+                      <td class="px-4 py-2 text-sm font-medium text-gray-900">${formatCurrency(
+                        item.subtotal
+                      )}</td>
                     </tr>
-                  `).join('')}
+                  `
+                    )
+                    .join("")}
                 </tbody>
               </table>
             </div>
@@ -1270,14 +1446,22 @@ function showSaleDetailsModal(saleData) {
             <div class="space-y-2">
               <div class="flex justify-between text-sm">
                 <span class="text-gray-600">Subtotal:</span>
-                <span class="font-medium">${formatCurrency(saleData.subtotal)}</span>
+                <span class="font-medium">${formatCurrency(
+                  saleData.subtotal
+                )}</span>
               </div>
-              ${saleData.discount > 0 ? `
+              ${
+                saleData.discount > 0
+                  ? `
                 <div class="flex justify-between text-sm">
                   <span class="text-gray-600">Descuento:</span>
-                  <span class="font-medium text-green-600">-${formatCurrency(saleData.discount)}</span>
+                  <span class="font-medium text-green-600">-${formatCurrency(
+                    saleData.discount
+                  )}</span>
                 </div>
-              ` : ''}
+              `
+                  : ""
+              }
               <div class="flex justify-between text-lg font-semibold border-t pt-2">
                 <span>Total:</span>
                 <span>${formatCurrency(saleData.total)}</span>
@@ -1287,7 +1471,12 @@ function showSaleDetailsModal(saleData) {
         </div>
         
         <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-          <button onclick="printSaleReceiptWindow(${JSON.stringify(saleData).replace(/"/g, '"')})" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          <button onclick="printSaleReceiptWindow(${JSON.stringify(
+            saleData
+          ).replace(
+            /"/g,
+            '"'
+          )})" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
             🖨️ Imprimir Recibo
           </button>
           <button onclick="closeSaleDetailsModal()" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
@@ -1298,16 +1487,16 @@ function showSaleDetailsModal(saleData) {
     </div>
   `;
 
-  modal.classList.remove('hidden');
+  modal.classList.remove("hidden");
 }
 
 /**
  * Cierra el modal de detalles de venta
  */
 function closeSaleDetailsModal() {
-  const modal = document.getElementById('sale-details-modal');
+  const modal = document.getElementById("sale-details-modal");
   if (modal) {
-    modal.classList.add('hidden');
+    modal.classList.add("hidden");
   }
 }
 
@@ -1316,8 +1505,8 @@ function closeSaleDetailsModal() {
  */
 function printSaleReceiptWindow(saleData) {
   const receiptContent = createReceiptHTML(saleData);
-  
-  const printWindow = window.open('', '_blank');
+
+  const printWindow = window.open("", "_blank");
   printWindow.document.write(`
     <!DOCTYPE html>
     <html lang="es">
@@ -1371,10 +1560,10 @@ function printSaleReceiptWindow(saleData) {
     </body>
     </html>
   `);
-  
+
   printWindow.document.close();
   printWindow.focus();
-  
+
   setTimeout(() => {
     printWindow.print();
     printWindow.close();
@@ -1390,59 +1579,66 @@ window.printSaleReceiptWindow = printSaleReceiptWindow;
  */
 async function handleExportSales() {
   try {
-    showNotification('Exportando ventas...', 'info');
-    
+    showNotification("Exportando ventas...", "info");
+
     const db = window.firebaseDB();
     if (!db) {
-      showNotification('Firebase no disponible para exportar', 'error');
+      showNotification("Firebase no disponible para exportar", "error");
       return;
     }
 
-    const salesSnapshot = await db.collection('sales')
-      .orderBy('createdAt', 'desc')
+    const salesSnapshot = await db
+      .collection("sales")
+      .orderBy("createdAt", "desc")
       .get();
-    
+
     const sales = [];
     salesSnapshot.forEach((doc) => {
       const saleData = doc.data();
       sales.push({
-        'Número de Venta': saleData.saleNumber,
-        'Fecha': formatDateTime(saleData.createdAt),
-        'Cliente': saleData.customerName,
-        'Total': saleData.total,
-        'Descuento': saleData.discount || 0,
-        'Subtotal': saleData.subtotal,
-        'Método de Pago': saleData.paymentMethod,
-        'Productos': saleData.items.length,
-        'Estado': saleData.status
+        "Número de Venta": saleData.saleNumber,
+        Fecha: formatDateTime(saleData.createdAt),
+        Cliente: saleData.customerName,
+        Total: saleData.total,
+        Descuento: saleData.discount || 0,
+        Subtotal: saleData.subtotal,
+        "Método de Pago": saleData.paymentMethod,
+        Productos: saleData.items.length,
+        Estado: saleData.status,
       });
     });
 
     if (sales.length === 0) {
-      showNotification('No hay ventas para exportar', 'warning');
+      showNotification("No hay ventas para exportar", "warning");
       return;
     }
 
     // Convertir a CSV
     const headers = Object.keys(sales[0]);
     const csvContent = [
-      headers.join(','),
-      ...sales.map(sale => 
-        headers.map(header => {
-          const value = sale[header];
-          return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
-        }).join(',')
-      )
-    ].join('\n');
+      headers.join(","),
+      ...sales.map((sale) =>
+        headers
+          .map((header) => {
+            const value = sale[header];
+            return typeof value === "string" && value.includes(",")
+              ? `"${value}"`
+              : value;
+          })
+          .join(",")
+      ),
+    ].join("\n");
 
     // Descargar archivo
-    const fileName = `ventas_${new Date().toISOString().split('T')[0]}.csv`;
-    downloadFile(csvContent, fileName, 'text/csv');
-    
-    showNotification(`${sales.length} ventas exportadas exitosamente`, 'success');
+    const fileName = `ventas_${new Date().toISOString().split("T")[0]}.csv`;
+    downloadFile(csvContent, fileName, "text/csv");
 
+    showNotification(
+      `${sales.length} ventas exportadas exitosamente`,
+      "success"
+    );
   } catch (error) {
-    console.error('❌ Error al exportar ventas:', error);
-    showNotification('Error al exportar ventas', 'error');
+    console.error("❌ Error al exportar ventas:", error);
+    showNotification("Error al exportar ventas", "error");
   }
 }

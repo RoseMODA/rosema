@@ -1,483 +1,177 @@
 /**
- * Firebase Products - Manejo de productos en Firestore
- * CRUD completo para productos con Firebase Storage para imágenes
- * Usando Firebase compat API
+ * Firebase Products Functions - Funciones para manejar productos en Firebase
  */
-import { db } from './firebase.js';
-// y luego usás db directamente
+
+import { db } from "../firebase.js";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  orderBy,
+  limit,
+} from "firebase/firestore";
+
+const PRODUCTS_COLLECTION = "products";
 
 /**
- * Sube una imagen a Firebase Storage
+ * Obtiene todos los productos de Firebase
+ * @returns {Promise<Array>} Array de productos
  */
-async function uploadProductImage(file, productId) {
+export async function getProducts() {
   try {
-    const db = window.firebaseDB();
-    const storage = window.firebaseStorage();
-    
-    if (!storage) {
-      throw new Error('Firebase Storage no está disponible');
-    }
-    
-    // Crear referencia única para la imagen
-    const timestamp = Date.now();
-    const fileName = `${productId}_${timestamp}_${file.name}`;
-    const storageRef = storage.ref(`products/${fileName}`);
-    
-    console.log(`📤 Subiendo imagen: ${fileName}`);
-    
-    // Subir archivo
-    const snapshot = await storageRef.put(file);
-    
-    // Obtener URL de descarga
-    const downloadURL = await snapshot.ref.getDownloadURL();
-    
-    console.log(`✅ Imagen subida exitosamente: ${downloadURL}`);
-    return downloadURL;
-    
-  } catch (error) {
-    console.error('❌ Error al subir imagen:', error);
-    throw new Error('Error al subir la imagen');
-  }
-}
+    const productsRef = collection(db, PRODUCTS_COLLECTION);
+    const q = query(productsRef, orderBy("name", "asc"));
+    const querySnapshot = await getDocs(q);
 
-/**
- * Elimina una imagen de Firebase Storage
- */
-async function deleteProductImage(imageUrl) {
-  try {
-    if (!imageUrl || !imageUrl.includes('firebase')) return;
-    
-    const storage = window.firebaseStorage();
-    if (!storage) return;
-    
-    const imageRef = storage.refFromURL(imageUrl);
-    await imageRef.delete();
-    console.log(`🗑️ Imagen eliminada: ${imageUrl}`);
-    
-  } catch (error) {
-    console.error('❌ Error al eliminar imagen:', error);
-    // No lanzar error, ya que el producto puede eliminarse aunque falle la imagen
-  }
-}
-
-/**
- * Crea un nuevo producto
- */
-async function createProduct(productData, imageFiles = []) {
-  try {
-    console.log('📦 Creando nuevo producto:', productData.name);
-    
-    const db = window.firebaseDB();
-    if (!db) {
-      throw new Error('Firebase no está disponible');
-    }
-    
-    // Validar datos requeridos
-    if (!productData.name || !productData.category || productData.price === undefined || productData.price === '') {
-      throw new Error('Faltan datos requeridos: nombre, categoría y precio');
-    }
-    
-    // Preparar datos del producto con validaciones mejoradas
-    const newProduct = {
-      name: productData.name.trim(),
-      category: productData.category,
-      sku: productData.sku ? productData.sku.trim() : '',
-      price: parseFloat(productData.price) || 0,
-      originalPrice: productData.originalPrice ? parseFloat(productData.originalPrice) : null,
-      stock: parseInt(productData.stock) || 0,
-      colors: Array.isArray(productData.colors) ? productData.colors : [],
-      sizes: Array.isArray(productData.sizes) ? productData.sizes : [],
-      tags: Array.isArray(productData.tags) ? productData.tags : [],
-      description: productData.description ? productData.description.trim() : '',
-      featured: Boolean(productData.featured),
-      onSale: Boolean(productData.onSale),
-      images: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    // Crear documento en Firestore
-    const docRef = await db.collection('products').add(newProduct);
-    const productId = docRef.id;
-    
-    console.log(`✅ Producto creado con ID: ${productId}`);
-    
-    // Subir imágenes si existen
-    if (imageFiles && imageFiles.length > 0) {
-      const imageUrls = [];
-      
-      for (const file of imageFiles) {
-        try {
-          // Validar archivo antes de subir
-          if (!validateFileType(file)) {
-            console.warn(`⚠️ Archivo ${file.name} tiene formato no válido`);
-            continue;
-          }
-          
-          if (!validateFileSize(file)) {
-            console.warn(`⚠️ Archivo ${file.name} es muy grande`);
-            continue;
-          }
-          
-          const imageUrl = await uploadProductImage(file, productId);
-          imageUrls.push(imageUrl);
-          console.log(`✅ Imagen subida: ${file.name}`);
-        } catch (error) {
-          console.error(`❌ Error al subir imagen ${file.name}:`, error);
-          // Continuar con otras imágenes
-        }
-      }
-      
-      // Actualizar producto con URLs de imágenes
-      if (imageUrls.length > 0) {
-        await docRef.update({
-          images: imageUrls,
-          updatedAt: new Date().toISOString()
-        });
-        console.log(`✅ ${imageUrls.length} imágenes agregadas al producto`);
-      }
-    }
-    
-    showNotification(`Producto "${productData.name}" creado exitosamente`, 'success');
-    return { success: true, id: productId };
-    
-  } catch (error) {
-    console.error('❌ Error al crear producto:', error);
-    showNotification(`Error al crear producto: ${error.message}`, 'error');
-    return { success: false, error: error.message };
-  }
-}
-
-/**
- * Actualiza un producto existente
- */
-async function updateProduct(productId, updatedData, newImageFiles = []) {
-  try {
-    console.log(`📝 Actualizando producto: ${productId}`);
-    
-    const db = window.firebaseDB();
-    if (!db) {
-      throw new Error('Firebase no está disponible');
-    }
-    
-    // Validar datos requeridos
-    if (!updatedData.name || !updatedData.category || updatedData.price === undefined || updatedData.price === '') {
-      throw new Error('Faltan datos requeridos: nombre, categoría y precio');
-    }
-    
-    // Preparar datos actualizados con validaciones mejoradas
-    const updateData = {
-      name: updatedData.name.trim(),
-      category: updatedData.category,
-      sku: updatedData.sku ? updatedData.sku.trim() : '',
-      price: parseFloat(updatedData.price) || 0,
-      originalPrice: updatedData.originalPrice ? parseFloat(updatedData.originalPrice) : null,
-      stock: parseInt(updatedData.stock) || 0,
-      colors: Array.isArray(updatedData.colors) ? updatedData.colors : [],
-      sizes: Array.isArray(updatedData.sizes) ? updatedData.sizes : [],
-      tags: Array.isArray(updatedData.tags) ? updatedData.tags : [],
-      description: updatedData.description ? updatedData.description.trim() : '',
-      featured: Boolean(updatedData.featured),
-      onSale: Boolean(updatedData.onSale),
-      updatedAt: new Date().toISOString()
-    };
-    
-    // Obtener producto actual para manejar imágenes
-    const productRef = db.collection('products').doc(productId);
-    const productSnap = await productRef.get();
-    
-    if (!productSnap.exists) {
-      throw new Error('Producto no encontrado');
-    }
-    
-    const currentProduct = productSnap.data();
-    let imageUrls = [...(currentProduct.images || [])];
-    
-    // Subir nuevas imágenes si existen
-    if (newImageFiles && newImageFiles.length > 0) {
-      for (const file of newImageFiles) {
-        try {
-          // Validar archivo antes de subir
-          if (!validateFileType(file)) {
-            console.warn(`⚠️ Archivo ${file.name} tiene formato no válido`);
-            continue;
-          }
-          
-          if (!validateFileSize(file)) {
-            console.warn(`⚠️ Archivo ${file.name} es muy grande`);
-            continue;
-          }
-          
-          const imageUrl = await uploadProductImage(file, productId);
-          imageUrls.push(imageUrl);
-          console.log(`✅ Nueva imagen agregada: ${file.name}`);
-        } catch (error) {
-          console.error(`❌ Error al subir nueva imagen ${file.name}:`, error);
-        }
-      }
-      
-      updateData.images = imageUrls;
-    }
-    
-    // Actualizar documento
-    await productRef.update(updateData);
-    
-    console.log(`✅ Producto actualizado: ${productId}`);
-    showNotification(`Producto actualizado exitosamente`, 'success');
-    return { success: true };
-    
-  } catch (error) {
-    console.error('❌ Error al actualizar producto:', error);
-    showNotification(`Error al actualizar producto: ${error.message}`, 'error');
-    return { success: false, error: error.message };
-  }
-}
-
-/**
- * Elimina un producto
- */
-async function deleteProduct(productId) {
-  try {
-    console.log(`🗑️ Eliminando producto: ${productId}`);
-    
-    const db = window.firebaseDB();
-    if (!db) {
-      throw new Error('Firebase no está disponible');
-    }
-    
-    // Obtener producto para eliminar imágenes
-    const productRef = db.collection('products').doc(productId);
-    const productSnap = await productRef.get();
-    
-    if (productSnap.exists) {
-      const productData = productSnap.data();
-      
-      // Eliminar imágenes de Storage
-      if (productData.images && productData.images.length > 0) {
-        for (const imageUrl of productData.images) {
-          await deleteProductImage(imageUrl);
-        }
-      }
-    }
-    
-    // Eliminar documento de Firestore
-    await productRef.delete();
-    
-    console.log(`✅ Producto eliminado: ${productId}`);
-    showNotification('Producto eliminado exitosamente', 'success');
-    return { success: true };
-    
-  } catch (error) {
-    console.error('❌ Error al eliminar producto:', error);
-    showNotification(`Error al eliminar producto: ${error.message}`, 'error');
-    return { success: false, error: error.message };
-  }
-}
-
-/**
- * Obtiene todos los productos
- */
-async function getProducts() {
-  try {
-    console.log('📋 Obteniendo productos...');
-    
-    const db = window.firebaseDB();
-    if (!db) {
-      console.warn('Firebase no disponible, retornando array vacío');
-      return [];
-    }
-    
-    const querySnapshot = await db.collection('products').get();
     const products = [];
-    
     querySnapshot.forEach((doc) => {
       products.push({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       });
     });
-    
-    console.log(`✅ ${products.length} productos obtenidos`);
+
     return products;
-    
   } catch (error) {
-    console.error('❌ Error al obtener productos:', error);
-    showNotification('Error al cargar productos', 'error');
-    return [];
+    console.error("Error al obtener productos:", error);
+    throw error;
+  }
+}
+
+/**
+ * Obtiene productos con stock bajo (menos de 10 unidades)
+ * @returns {Promise<Array>} Array de productos con stock bajo
+ */
+export async function getLowStockProducts() {
+  try {
+    const productsRef = collection(db, PRODUCTS_COLLECTION);
+    const q = query(
+      productsRef,
+      where("stock", "<", 2),
+      orderBy("stock", "asc")
+    );
+    const querySnapshot = await getDocs(q);
+
+    const lowStockProducts = [];
+    querySnapshot.forEach((doc) => {
+      lowStockProducts.push({
+        id: doc.id,
+        ...doc.data(),
+      });
+    });
+
+    return lowStockProducts;
+  } catch (error) {
+    console.error("Error al obtener productos con stock bajo:", error);
+    throw error;
   }
 }
 
 /**
  * Obtiene un producto por ID
+ * @param {string} productId - ID del producto
+ * @returns {Promise<Object|null>} Producto o null si no existe
  */
-async function getProductById(productId) {
+export async function getProductById(productId) {
   try {
-    const db = window.firebaseDB();
-    if (!db) return null;
-    
-    const productRef = db.collection('products').doc(productId);
-    const productSnap = await productRef.get();
-    
-    if (productSnap.exists) {
+    const productRef = doc(db, PRODUCTS_COLLECTION, productId);
+    const productSnap = await getDoc(productRef);
+
+    if (productSnap.exists()) {
       return {
         id: productSnap.id,
-        ...productSnap.data()
+        ...productSnap.data(),
       };
-    } else {
-      return null;
     }
-    
-  } catch (error) {
-    console.error('❌ Error al obtener producto:', error);
+
     return null;
+  } catch (error) {
+    console.error("Error al obtener producto:", error);
+    throw error;
   }
 }
 
 /**
- * Busca productos por SKU
+ * Agrega un nuevo producto
+ * @param {Object} productData - Datos del producto
+ * @returns {Promise<Object>} Producto creado con ID
  */
-async function getProductBySKU(sku) {
+export async function addProduct(productData) {
   try {
-    const db = window.firebaseDB();
-    if (!db) return null;
-    
-    const querySnapshot = await db.collection('products')
-      .where('sku', '==', sku)
-      .limit(1)
-      .get();
-    
-    if (!querySnapshot.empty) {
-      const doc = querySnapshot.docs[0];
-      return {
-        id: doc.id,
-        ...doc.data()
-      };
-    }
-    
-    return null;
-    
-  } catch (error) {
-    console.error('❌ Error al buscar producto por SKU:', error);
-    return null;
-  }
-}
-
-/**
- * Obtiene productos por categoría
- */
-async function getProductsByCategory(category) {
-  try {
-    const db = window.firebaseDB();
-    if (!db) return [];
-    
-    const querySnapshot = await db.collection('products')
-      .where('category', '==', category)
-      .get();
-    const products = [];
-    
-    querySnapshot.forEach((doc) => {
-      products.push({
-        id: doc.id,
-        ...doc.data()
-      });
+    const docRef = await addDoc(collection(db, PRODUCTS_COLLECTION), {
+      ...productData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
-    
-    return products;
-    
+
+    return {
+      id: docRef.id,
+      ...productData,
+    };
   } catch (error) {
-    console.error('❌ Error al obtener productos por categoría:', error);
-    return [];
+    console.error("Error al agregar producto:", error);
+    throw error;
   }
 }
 
 /**
- * Obtiene productos con stock bajo
+ * Actualiza un producto existente
+ * @param {string} productId - ID del producto
+ * @param {Object} updateData - Datos a actualizar
+ * @returns {Promise<void>}
  */
-async function getLowStockProducts(threshold = 5) {
+export async function updateProduct(productId, updateData) {
+  try {
+    const productRef = doc(db, PRODUCTS_COLLECTION, productId);
+    await updateDoc(productRef, {
+      ...updateData,
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Error al actualizar producto:", error);
+    throw error;
+  }
+}
+
+/**
+ * Elimina un producto
+ * @param {string} productId - ID del producto
+ * @returns {Promise<void>}
+ */
+export async function deleteProduct(productId) {
+  try {
+    const productRef = doc(db, PRODUCTS_COLLECTION, productId);
+    await deleteDoc(productRef);
+  } catch (error) {
+    console.error("Error al eliminar producto:", error);
+    throw error;
+  }
+}
+
+/**
+ * Busca productos por nombre o SKU
+ * @param {string} searchTerm - Término de búsqueda
+ * @returns {Promise<Array>} Productos encontrados
+ */
+export async function searchProducts(searchTerm) {
   try {
     const products = await getProducts();
-    return products.filter(product => (product.stock || 0) <= threshold);
-    
+
+    return products.filter(
+      (product) =>
+        product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.sku?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   } catch (error) {
-    console.error('❌ Error al obtener productos con stock bajo:', error);
-    return [];
+    console.error("Error al buscar productos:", error);
+    throw error;
   }
 }
 
-/**
- * Actualiza el stock de un producto
- */
-async function updateProductStock(productId, newStock) {
-  try {
-    const db = window.firebaseDB();
-    if (!db) {
-      throw new Error('Firebase no está disponible');
-    }
-    
-    const productRef = db.collection('products').doc(productId);
-    await productRef.update({
-      stock: parseInt(newStock),
-      updatedAt: new Date().toISOString()
-    });
-    
-    console.log(`📦 Stock actualizado para producto ${productId}: ${newStock}`);
-    return { success: true };
-    
-  } catch (error) {
-    console.error('❌ Error al actualizar stock:', error);
-    return { success: false, error: error.message };
-  }
-}
-
-/**
- * Migra productos desde products.json a Firestore
- */
-async function migrateProductsFromJSON() {
-  try {
-    console.log('🔄 Iniciando migración de productos...');
-    
-    const db = window.firebaseDB();
-    if (!db) {
-      throw new Error('Firebase no está disponible');
-    }
-    
-    // Cargar productos desde JSON
-    const response = await fetch('../products.json');
-    const jsonProducts = await response.json();
-    
-    let migratedCount = 0;
-    let errorCount = 0;
-    
-    for (const product of jsonProducts) {
-      try {
-        // Preparar datos del producto
-        const productData = {
-          ...product,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-        
-        // Crear en Firestore
-        await db.collection('products').add(productData);
-        migratedCount++;
-        
-        console.log(`✅ Migrado: ${product.name}`);
-        
-      } catch (error) {
-        console.error(`❌ Error al migrar ${product.name}:`, error);
-        errorCount++;
-      }
-    }
-    
-    const message = `Migración completada: ${migratedCount} productos migrados, ${errorCount} errores`;
-    console.log(message);
-    showNotification(message, migratedCount > 0 ? 'success' : 'warning');
-    
-    return { success: true, migrated: migratedCount, errors: errorCount };
-    
-  } catch (error) {
-    console.error('❌ Error en migración:', error);
-    showNotification(`Error en migración: ${error.message}`, 'error');
-    return { success: false, error: error.message };
-  }
-}
+// Importar getDoc si no está importado
+import { getDoc } from "firebase/firestore";

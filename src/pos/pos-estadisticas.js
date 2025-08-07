@@ -3,6 +3,10 @@
  * Basado en la maqueta visual proporcionada
  */
 
+import { getProducts } from "./firebase-products.js";
+import { db } from "./firebase.js";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
+
 /**
  * Inicializa la página de estadísticas
  */
@@ -17,24 +21,20 @@ async function initEstadisticas(container) {
     `;
 
     // Cargar datos
-    const [products, sales] = await Promise.all([
-      getProducts(),
-      getSales()
-    ]);
-    
+    const [products, sales] = await Promise.all([getProducts(), getSales()]);
+
     // Calcular estadísticas
     const stats = calculateStatistics(products, sales);
-    
+
     // Renderizar interfaz
     container.innerHTML = createEstadisticasHTML(stats);
-    
+
     // Configurar event listeners
     setupEstadisticasEvents();
-    
   } catch (error) {
-    console.error('❌ Error al cargar estadísticas:', error);
-    showNotification('Error al cargar estadísticas', 'error');
-    
+    console.error("❌ Error al cargar estadísticas:", error);
+    showNotification("Error al cargar estadísticas", "error");
+
     container.innerHTML = `
       <div class="text-center py-12">
         <h3 class="text-xl font-semibold text-red-600 mb-2">Error al cargar estadísticas</h3>
@@ -52,27 +52,21 @@ async function initEstadisticas(container) {
  */
 async function getSales() {
   try {
-    const db = window.firebaseDB();
-    if (!db) {
-      console.warn('Firebase no disponible para cargar ventas');
-      return [];
-    }
+    const salesRef = collection(db, "sales");
+    const q = query(salesRef, orderBy("createdAt", "desc"));
+    const salesSnapshot = await getDocs(q);
 
-    const salesSnapshot = await db.collection('sales')
-      .orderBy('createdAt', 'desc')
-      .get();
-    
     const sales = [];
     salesSnapshot.forEach((doc) => {
       sales.push({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       });
     });
-    
+
     return sales;
   } catch (error) {
-    console.error('❌ Error al obtener ventas:', error);
+    console.error("❌ Error al obtener ventas:", error);
     return [];
   }
 }
@@ -84,25 +78,40 @@ function calculateStatistics(products, sales) {
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
-  
+
   // Filtrar ventas del mes actual
-  const currentMonthSales = sales.filter(sale => {
+  const currentMonthSales = sales.filter((sale) => {
     const saleDate = new Date(sale.createdAt);
-    return saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
+    return (
+      saleDate.getMonth() === currentMonth &&
+      saleDate.getFullYear() === currentYear
+    );
   });
-  
+
   // Filtrar ventas del mes anterior
   const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
   const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-  const lastMonthSales = sales.filter(sale => {
+  const lastMonthSales = sales.filter((sale) => {
     const saleDate = new Date(sale.createdAt);
-    return saleDate.getMonth() === lastMonth && saleDate.getFullYear() === lastMonthYear;
+    return (
+      saleDate.getMonth() === lastMonth &&
+      saleDate.getFullYear() === lastMonthYear
+    );
   });
 
   // Calcular métricas principales
-  const totalRevenue = currentMonthSales.reduce((sum, sale) => sum + (sale.total || 0), 0);
-  const lastMonthRevenue = lastMonthSales.reduce((sum, sale) => sum + (sale.total || 0), 0);
-  const revenueChange = calculatePercentageChange(totalRevenue, lastMonthRevenue);
+  const totalRevenue = currentMonthSales.reduce(
+    (sum, sale) => sum + (sale.total || 0),
+    0
+  );
+  const lastMonthRevenue = lastMonthSales.reduce(
+    (sum, sale) => sum + (sale.total || 0),
+    0
+  );
+  const revenueChange = calculatePercentageChange(
+    totalRevenue,
+    lastMonthRevenue
+  );
 
   const totalProfit = totalRevenue * 0.4; // Asumiendo 40% de margen
   const lastMonthProfit = lastMonthRevenue * 0.4;
@@ -116,7 +125,10 @@ function calculateStatistics(products, sales) {
   const lastMonthLeads = lastMonthSales.length * 2.5;
   const leadsChange = calculatePercentageChange(totalLeads, lastMonthLeads);
 
-  const totalSales = currentMonthSales.reduce((sum, sale) => sum + (sale.total || 0), 0);
+  const totalSales = currentMonthSales.reduce(
+    (sum, sale) => sum + (sale.total || 0),
+    0
+  );
   const totalVisitors = Math.floor(totalSales / 100); // Simulado
   const earningGrowth = totalRevenue * 0.25; // Simulado
 
@@ -124,25 +136,25 @@ function calculateStatistics(products, sales) {
   const recentTransactions = sales
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 4)
-    .map(sale => ({
+    .map((sale) => ({
       id: sale.id,
-      customerName: sale.customerName || 'Cliente General',
+      customerName: sale.customerName || "Cliente General",
       amount: sale.total || 0,
-      type: Math.random() > 0.5 ? 'Income' : 'Outcome',
-      date: sale.createdAt
+      type: Math.random() > 0.5 ? "Income" : "Outcome",
+      date: sale.createdAt,
     }));
 
   // Productos más vendidos
   const productSales = {};
-  sales.forEach(sale => {
+  sales.forEach((sale) => {
     if (sale.items) {
-      sale.items.forEach(item => {
+      sale.items.forEach((item) => {
         if (!productSales[item.productId]) {
           productSales[item.productId] = {
             name: item.name,
             totalSales: 0,
             totalQuantity: 0,
-            revenue: 0
+            revenue: 0,
           };
         }
         productSales[item.productId].totalSales += item.subtotal || 0;
@@ -171,7 +183,7 @@ function calculateStatistics(products, sales) {
     recentTransactions,
     topSellingProducts,
     currentMonthSales: currentMonthSales.length,
-    lastMonthSales: lastMonthSales.length
+    lastMonthSales: lastMonthSales.length,
   };
 }
 
@@ -187,10 +199,16 @@ function createEstadisticasHTML(stats) {
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-red-100">Ingresos Totales</p>
-            <p class="text-2xl font-bold">${formatCurrency(stats.totalRevenue)}</p>
+            <p class="text-2xl font-bold">${formatCurrency(
+              stats.totalRevenue
+            )}</p>
             <div class="flex items-center mt-2">
-              <span class="text-xs ${stats.revenueChange >= 0 ? 'text-green-200' : 'text-red-200'}">
-                ${stats.revenueChange >= 0 ? '+' : ''}${stats.revenueChange.toFixed(1)}%
+              <span class="text-xs ${
+                stats.revenueChange >= 0 ? "text-green-200" : "text-red-200"
+              }">
+                ${
+                  stats.revenueChange >= 0 ? "+" : ""
+                }${stats.revenueChange.toFixed(1)}%
               </span>
               <span class="text-xs text-red-100 ml-2">Del último mes</span>
             </div>
@@ -206,10 +224,16 @@ function createEstadisticasHTML(stats) {
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-gray-600">Total ganado</p>
-            <p class="text-2xl font-bold text-gray-900">${formatCurrency(stats.totalProfit)}</p>
+            <p class="text-2xl font-bold text-gray-900">${formatCurrency(
+              stats.totalProfit
+            )}</p>
             <div class="flex items-center mt-2">
-              <span class="text-xs ${stats.profitChange >= 0 ? 'text-green-600' : 'text-red-600'}">
-                ${stats.profitChange >= 0 ? '+' : ''}${stats.profitChange.toFixed(1)}%
+              <span class="text-xs ${
+                stats.profitChange >= 0 ? "text-green-600" : "text-red-600"
+              }">
+                ${
+                  stats.profitChange >= 0 ? "+" : ""
+                }${stats.profitChange.toFixed(1)}%
               </span>
               <span class="text-xs text-gray-500 ml-2">Del último mes</span>
             </div>
@@ -225,10 +249,16 @@ function createEstadisticasHTML(stats) {
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-gray-600">Costo total</p>
-            <p class="text-2xl font-bold text-gray-900">${formatCurrency(stats.totalCost)}</p>
+            <p class="text-2xl font-bold text-gray-900">${formatCurrency(
+              stats.totalCost
+            )}</p>
             <div class="flex items-center mt-2">
-              <span class="text-xs ${stats.costChange <= 0 ? 'text-green-600' : 'text-red-600'}">
-                ${stats.costChange >= 0 ? '+' : ''}${stats.costChange.toFixed(1)}%
+              <span class="text-xs ${
+                stats.costChange <= 0 ? "text-green-600" : "text-red-600"
+              }">
+                ${stats.costChange >= 0 ? "+" : ""}${stats.costChange.toFixed(
+    1
+  )}%
               </span>
               <span class="text-xs text-gray-500 ml-2">Del último mes</span>
             </div>
@@ -253,7 +283,9 @@ function createEstadisticasHTML(stats) {
             <span class="text-sm text-gray-500">Mes pasado</span>
           </div>
         </div>
-        <div class="text-3xl font-bold text-gray-900 mb-2">${formatCurrency(stats.totalSales)}</div>
+        <div class="text-3xl font-bold text-gray-900 mb-2">${formatCurrency(
+          stats.totalSales
+        )}</div>
         <div class="h-32 bg-gray-100 rounded flex items-center justify-center">
           <span class="text-gray-500">Gráfico de líneas (simulado)</span>
         </div>
@@ -268,7 +300,9 @@ function createEstadisticasHTML(stats) {
             <span class="text-sm text-gray-500">Mes pasado</span>
           </div>
         </div>
-        <div class="text-3xl font-bold text-gray-900 mb-2">${formatNumber(stats.totalVisitors)}</div>
+        <div class="text-3xl font-bold text-gray-900 mb-2">${formatNumber(
+          stats.totalVisitors
+        )}</div>
         <div class="h-32 bg-gray-100 rounded flex items-center justify-center">
           <span class="text-gray-500">Gráfico de barras (simulado)</span>
         </div>
@@ -283,7 +317,9 @@ function createEstadisticasHTML(stats) {
             <span class="text-sm text-gray-500">Semana pasada</span>
           </div>
         </div>
-        <div class="text-3xl font-bold text-gray-900 mb-2">${formatCurrency(stats.earningGrowth)}</div>
+        <div class="text-3xl font-bold text-gray-900 mb-2">${formatCurrency(
+          stats.earningGrowth
+        )}</div>
         <div class="h-32 bg-gray-100 rounded flex items-center justify-center">
           <span class="text-gray-500">Gráfico de área (simulado)</span>
         </div>
@@ -299,31 +335,50 @@ function createEstadisticasHTML(stats) {
           <button class="text-red-600 text-sm hover:underline">Ver todas las transacciones</button>
         </div>
         <div class="space-y-4">
-          ${stats.recentTransactions.length > 0 ? 
-            stats.recentTransactions.map(transaction => `
+          ${
+            stats.recentTransactions.length > 0
+              ? stats.recentTransactions
+                  .map(
+                    (transaction) => `
               <div class="flex items-center space-x-3">
                 <div class="w-10 h-10 rounded-full flex items-center justify-center ${
-                  transaction.type === 'Income' ? 'bg-green-100' : 'bg-red-100'
+                  transaction.type === "Income" ? "bg-green-100" : "bg-red-100"
                 }">
-                  <span class="text-sm">${transaction.type === 'Income' ? '💰' : '💸'}</span>
+                  <span class="text-sm">${
+                    transaction.type === "Income" ? "💰" : "💸"
+                  }</span>
                 </div>
                 <div class="flex-1">
-                  <p class="font-medium text-gray-900">${transaction.customerName}</p>
-                  <p class="text-sm text-gray-500">${formatDate(transaction.date)}</p>
+                  <p class="font-medium text-gray-900">${
+                    transaction.customerName
+                  }</p>
+                  <p class="text-sm text-gray-500">${formatDate(
+                    transaction.date
+                  )}</p>
                 </div>
                 <div class="text-right">
-                  <p class="font-semibold ${transaction.type === 'Income' ? 'text-green-600' : 'text-red-600'}">
-                    ${transaction.type === 'Income' ? '+' : '-'}${formatCurrency(Math.abs(transaction.amount))}
+                  <p class="font-semibold ${
+                    transaction.type === "Income"
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }">
+                    ${
+                      transaction.type === "Income" ? "+" : "-"
+                    }${formatCurrency(Math.abs(transaction.amount))}
                   </p>
                   <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                    transaction.type === 'Income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    transaction.type === "Income"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
                   }">
                     ${transaction.type}
                   </span>
                 </div>
               </div>
-            `).join('') :
-            `<div class="text-center py-8 text-gray-500">
+            `
+                  )
+                  .join("")
+              : `<div class="text-center py-8 text-gray-500">
               <span class="text-4xl">📊</span>
               <p class="mt-2">No hay transacciones recientes</p>
             </div>`
@@ -338,26 +393,37 @@ function createEstadisticasHTML(stats) {
           <button class="text-red-600 text-sm hover:underline">Ver todos los productos</button>
         </div>
         <div class="space-y-4">
-          ${stats.topSellingProducts.length > 0 ? 
-            stats.topSellingProducts.map((product, index) => `
+          ${
+            stats.topSellingProducts.length > 0
+              ? stats.topSellingProducts
+                  .map(
+                    (product, index) => `
               <div class="flex items-center space-x-3">
                 <div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
                   <span class="text-gray-500 text-xs">📦</span>
                 </div>
                 <div class="flex-1">
                   <p class="font-medium text-gray-900">${product.name}</p>
-                  <p class="text-sm text-gray-500">${product.totalQuantity} unidades restantes</p>
+                  <p class="text-sm text-gray-500">${
+                    product.totalQuantity
+                  } unidades restantes</p>
                 </div>
                 <div class="text-right">
-                  <p class="font-semibold text-gray-900">${formatCurrency(product.revenue)}</p>
-                  <p class="text-sm text-gray-500">Ventas totales: ${formatCurrency(product.totalSales)}</p>
+                  <p class="font-semibold text-gray-900">${formatCurrency(
+                    product.revenue
+                  )}</p>
+                  <p class="text-sm text-gray-500">Ventas totales: ${formatCurrency(
+                    product.totalSales
+                  )}</p>
                   <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
                     Disponible
                   </span>
                 </div>
               </div>
-            `).join('') :
-            `<div class="text-center py-8 text-gray-500">
+            `
+                  )
+                  .join("")
+              : `<div class="text-center py-8 text-gray-500">
               <span class="text-4xl">📦</span>
               <p class="mt-2">No hay productos vendidos</p>
             </div>`
@@ -368,11 +434,10 @@ function createEstadisticasHTML(stats) {
   `;
 }
 
-
 /**
  * Configura los event listeners
  */
 function setupEstadisticasEvents() {
   // Por ahora no hay eventos específicos, pero se pueden agregar filtros de fecha, etc.
-  console.log('📊 Estadísticas cargadas correctamente');
+  console.log("📊 Estadísticas cargadas correctamente");
 }
