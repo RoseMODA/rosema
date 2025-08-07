@@ -1,11 +1,11 @@
 /**
  * Módulo de Productos
  * Maneja la carga, filtrado y gestión de datos de productos
- * Integrado con Firebase para sincronización con POS
+ * Usa Firestore como fuente única de datos
  */
 
-import { db } from '../../../firebase.js';
-import { collection, getDocs } from 'firebase/firestore';
+import { db } from "./firebase.js";
+import { collection, getDocs } from "firebase/firestore";
 
 // Variable global para almacenar los productos
 let products = [];
@@ -19,13 +19,28 @@ const categorySubcategories = {
       { name: "Vestidos", type: "vestidos" },
       { name: "Prendas de Torso", type: "torso" },
       { name: "Prendas de Piernas", type: "piernas" },
-      { name: "VERANO", type: "season", season: "verano", class: "season-verano" },
-      { name: "MEDIA ESTACION", type: "season", season: "media", class: "season-media" },
-      { name: "INVIERNO", type: "season", season: "invierno", class: "season-invierno" },
+      {
+        name: "VERANO",
+        type: "season",
+        season: "verano",
+        class: "season-verano",
+      },
+      {
+        name: "MEDIA ESTACION",
+        type: "season",
+        season: "media",
+        class: "season-media",
+      },
+      {
+        name: "INVIERNO",
+        type: "season",
+        season: "invierno",
+        class: "season-invierno",
+      },
       { name: "Formal", type: "formal" },
       { name: "Fiestas", type: "fiestas" },
-      { name: "TALLAS", type: "tallas" }
-    ]
+      { name: "TALLAS", type: "tallas" },
+    ],
   },
   hombre: {
     title: "ROPA DE HOMBRE",
@@ -34,13 +49,28 @@ const categorySubcategories = {
       { name: "Camisas", type: "camisas" },
       { name: "Pantalones", type: "pantalones" },
       { name: "Camperas", type: "camperas" },
-      { name: "VERANO", type: "season", season: "verano", class: "season-verano" },
-      { name: "MEDIA ESTACION", type: "season", season: "media", class: "season-media" },
-      { name: "INVIERNO", type: "season", season: "invierno", class: "season-invierno" },
+      {
+        name: "VERANO",
+        type: "season",
+        season: "verano",
+        class: "season-verano",
+      },
+      {
+        name: "MEDIA ESTACION",
+        type: "season",
+        season: "media",
+        class: "season-media",
+      },
+      {
+        name: "INVIERNO",
+        type: "season",
+        season: "invierno",
+        class: "season-invierno",
+      },
       { name: "Deportivo", type: "deportivo" },
       { name: "Formal", type: "formal" },
-      { name: "TALLAS", type: "tallas" }
-    ]
+      { name: "TALLAS", type: "tallas" },
+    ],
   },
   ninos: {
     title: "ROPA DE NIÑOS/BEBÉS",
@@ -49,12 +79,27 @@ const categorySubcategories = {
       { name: "Bebés (0-2 años)", type: "bebes" },
       { name: "Niños (3-8 años)", type: "ninos" },
       { name: "Niñas (3-8 años)", type: "ninas" },
-      { name: "VERANO", type: "season", season: "verano", class: "season-verano" },
-      { name: "MEDIA ESTACION", type: "season", season: "media", class: "season-media" },
-      { name: "INVIERNO", type: "season", season: "invierno", class: "season-invierno" },
+      {
+        name: "VERANO",
+        type: "season",
+        season: "verano",
+        class: "season-verano",
+      },
+      {
+        name: "MEDIA ESTACION",
+        type: "season",
+        season: "media",
+        class: "season-media",
+      },
+      {
+        name: "INVIERNO",
+        type: "season",
+        season: "invierno",
+        class: "season-invierno",
+      },
       { name: "Pijamas", type: "pijamas" },
-      { name: "TALLAS", type: "tallas" }
-    ]
+      { name: "TALLAS", type: "tallas" },
+    ],
   },
   otros: {
     title: "OTROS",
@@ -62,44 +107,9 @@ const categorySubcategories = {
       { name: "Ver todo", type: "all", active: true },
       { name: "Calzado", type: "calzado" },
       { name: "Ropa Interior", type: "ropa-interior" },
-      { name: "Accesorios", type: "accesorios" }
-    ]
+      { name: "Accesorios", type: "accesorios" },
+    ],
   },
-  calzado: {
-    title: "CALZADO",
-    items: [
-      { name: "Ver todo de CALZADO", type: "all", active: true },
-      { name: "Zapatillas", type: "zapatillas" },
-      { name: "Botas", type: "botas" },
-      { name: "Sandalias", type: "sandalias" },
-      { name: "Zapatos Formales", type: "formales" },
-      { name: "VERANO", type: "season", season: "verano", class: "season-verano" },
-      { name: "MEDIA ESTACION", type: "season", season: "media", class: "season-media" },
-      { name: "INVIERNO", type: "season", season: "invierno", class: "season-invierno" },
-      { name: "TALLAS", type: "tallas" }
-    ]
-  },
-  "ropa-interior": {
-    title: "ROPA INTERIOR",
-    items: [
-      { name: "Ver todo de ROPA INTERIOR", type: "all", active: true },
-      { name: "Ropa Interior Mujer", type: "mujer" },
-      { name: "Ropa Interior Hombre", type: "hombre" },
-      { name: "Ropa Interior Infantil", type: "infantil" },
-      { name: "TALLAS", type: "tallas" }
-    ]
-  },
-  accesorios: {
-    title: "ACCESORIOS",
-    items: [
-      { name: "Ver todo de ACCESORIOS", type: "all", active: true },
-      { name: "Carteras", type: "carteras" },
-      { name: "Cinturones", type: "cinturones" },
-      { name: "Sombreros", type: "sombreros" },
-      { name: "Joyas", type: "joyas" },
-      { name: "Bufandas", type: "bufandas" }
-    ]
-  }
 };
 
 /**
@@ -108,22 +118,24 @@ const categorySubcategories = {
  */
 async function loadProductsFromFirebase() {
   try {
-    console.log('🔥 Intentando cargar productos desde Firebase...');
-    const productsCollection = collection(db, 'products');
+    console.log("🔥 Intentando cargar productos desde Firebase...");
+    const productsCollection = collection(db, "products");
     const querySnapshot = await getDocs(productsCollection);
     const firebaseProducts = [];
-    
+
     querySnapshot.forEach((doc) => {
       firebaseProducts.push({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       });
     });
-    
-    console.log(`✅ Productos cargados desde Firebase: ${firebaseProducts.length} productos`);
+
+    console.log(
+      `✅ Productos cargados desde Firebase: ${firebaseProducts.length} productos`
+    );
     return firebaseProducts;
   } catch (error) {
-    console.error('❌ Error al cargar productos desde Firebase:', error);
+    console.error("❌ Error al cargar productos desde Firebase:", error);
     throw error;
   }
 }
@@ -134,8 +146,8 @@ async function loadProductsFromFirebase() {
  */
 async function loadProductsFromJSON() {
   try {
-    console.log('📄 Cargando productos desde JSON (fallback)...');
-    const response = await fetch('../products.json');
+    console.log("📄 Cargando productos desde JSON (fallback)...");
+    const response = await fetch("../products.json");
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status}`);
     }
@@ -143,7 +155,7 @@ async function loadProductsFromJSON() {
     console.log(`✅ Productos cargados desde JSON: ${data.length} productos`);
     return data;
   } catch (error) {
-    console.error('❌ Error al cargar productos desde JSON:', error);
+    console.error("❌ Error al cargar productos desde JSON:", error);
     throw error;
   }
 }
@@ -161,18 +173,20 @@ async function loadProducts() {
         return products;
       }
     } catch (firebaseError) {
-      console.warn('⚠️ Firebase no disponible, usando fallback a JSON');
+      console.warn("⚠️ Firebase no disponible, usando fallback a JSON");
     }
-    
+
     // Fallback a JSON si Firebase falla o no hay productos
     products = await loadProductsFromJSON();
     return products;
-    
   } catch (error) {
-    console.error('❌ Error al cargar productos:', error);
+    console.error("❌ Error al cargar productos:", error);
     // Mostrar notificación de error al usuario
-    if (typeof showNotification === 'function') {
-      showNotification('Error al cargar los productos. Por favor, recarga la página.', 'error');
+    if (typeof showNotification === "function") {
+      showNotification(
+        "Error al cargar los productos. Por favor, recarga la página.",
+        "error"
+      );
     }
     // Retornar array vacío para evitar errores en el resto de la aplicación
     products = [];
@@ -193,24 +207,28 @@ async function loadProductsFromRoot() {
         return products;
       }
     } catch (firebaseError) {
-      console.warn('⚠️ Firebase no disponible, usando fallback a JSON');
+      console.warn("⚠️ Firebase no disponible, usando fallback a JSON");
     }
-    
+
     // Fallback a JSON si Firebase falla
-    console.log('📄 Cargando productos desde JSON (fallback - root)...');
-    const response = await fetch('./products.json');
+    console.log("📄 Cargando productos desde JSON (fallback - root)...");
+    const response = await fetch("./products.json");
     if (!response.ok) {
       throw new Error(`Error HTTP: ${response.status}`);
     }
     const data = await response.json();
     products = data;
-    console.log(`✅ Productos cargados desde JSON: ${products.length} productos`);
+    console.log(
+      `✅ Productos cargados desde JSON: ${products.length} productos`
+    );
     return products;
-    
   } catch (error) {
-    console.error('❌ Error al cargar productos:', error);
-    if (typeof showNotification === 'function') {
-      showNotification('Error al cargar los productos. Por favor, recarga la página.', 'error');
+    console.error("❌ Error al cargar productos:", error);
+    if (typeof showNotification === "function") {
+      showNotification(
+        "Error al cargar los productos. Por favor, recarga la página.",
+        "error"
+      );
     }
     products = [];
     return products;
@@ -228,66 +246,77 @@ async function loadProductsFromRoot() {
  */
 function filterProducts(filters = {}) {
   const {
-    category = 'all',
-    search = '',
+    category = "all",
+    search = "",
     onSale = false,
-    subcategory = 'all',
+    subcategory = "all",
     colors = [],
     sizes = [],
     minPrice = null,
-    maxPrice = null
+    maxPrice = null,
   } = filters;
 
-  return products.filter(product => {
+  return products.filter((product) => {
     // Filtro por categoría
     let matchesCategory;
-    if (category === 'otros') {
+    if (category === "otros") {
       // Para la categoría "otros", incluir productos de calzado, ropa-interior y accesorios
-      matchesCategory = ['calzado', 'ropa-interior', 'accesorios'].includes(product.category);
+      matchesCategory = ["calzado", "ropa-interior", "accesorios"].includes(
+        product.category
+      );
     } else {
-      matchesCategory = category === 'all' || product.category === category;
+      matchesCategory = category === "all" || product.category === category;
     }
-    
+
     // Filtro por búsqueda
-    const matchesSearch = search === '' || 
-                         product.name.toLowerCase().includes(search.toLowerCase()) ||
-                         product.description.toLowerCase().includes(search.toLowerCase()) ||
-                         product.sku.toLowerCase().includes(search.toLowerCase());
-    
+    const matchesSearch =
+      search === "" ||
+      product.name.toLowerCase().includes(search.toLowerCase()) ||
+      product.description.toLowerCase().includes(search.toLowerCase()) ||
+      product.sku.toLowerCase().includes(search.toLowerCase());
+
     // Filtro por ofertas
     const matchesSale = !onSale || product.onSale;
-    
+
     // Filtro por colores
-    const matchesColors = colors.length === 0 || 
-                         colors.some(color => product.colors.includes(color));
-    
+    const matchesColors =
+      colors.length === 0 ||
+      colors.some((color) => product.colors.includes(color));
+
     // Filtro por tallas
-    const matchesSizes = sizes.length === 0 || 
-                        sizes.some(size => product.sizes.includes(size));
-    
+    const matchesSizes =
+      sizes.length === 0 || sizes.some((size) => product.sizes.includes(size));
+
     // Filtro por precio
     const matchesMinPrice = minPrice === null || product.price >= minPrice;
     const matchesMaxPrice = maxPrice === null || product.price <= maxPrice;
-    
+
     // Filtro por subcategoría - MEJORADO CON TAGS
     let matchesSubcategory = true;
-    if (subcategory !== 'all') {
+    if (subcategory !== "all") {
       // Verificar si el producto tiene tags y si coincide con la subcategoría
       if (product.tags && Array.isArray(product.tags)) {
         matchesSubcategory = product.tags.includes(subcategory);
       } else {
         // Fallback para productos sin tags - usar lógica anterior
-        if (category === 'otros') {
+        if (category === "otros") {
           matchesSubcategory = product.category === subcategory;
         } else {
           matchesSubcategory = true;
         }
       }
     }
-    
-    return matchesCategory && matchesSearch && matchesSale && 
-           matchesColors && matchesSizes && matchesMinPrice && 
-           matchesMaxPrice && matchesSubcategory;
+
+    return (
+      matchesCategory &&
+      matchesSearch &&
+      matchesSale &&
+      matchesColors &&
+      matchesSizes &&
+      matchesMinPrice &&
+      matchesMaxPrice &&
+      matchesSubcategory
+    );
   });
 }
 
@@ -297,19 +326,19 @@ function filterProducts(filters = {}) {
  * @param {string} sortBy - Criterio de ordenamiento
  * @returns {Array} Array de productos ordenados
  */
-function sortProducts(products, sortBy = 'featured') {
+function sortProducts(products, sortBy = "featured") {
   const sortedProducts = [...products];
-  
+
   switch (sortBy) {
-    case 'price-low':
+    case "price-low":
       return sortedProducts.sort((a, b) => a.price - b.price);
-    case 'price-high':
+    case "price-high":
       return sortedProducts.sort((a, b) => b.price - a.price);
-    case 'name':
+    case "name":
       return sortedProducts.sort((a, b) => a.name.localeCompare(b.name));
-    case 'newest':
+    case "newest":
       return sortedProducts.sort((a, b) => b.id - a.id);
-    case 'featured':
+    case "featured":
     default:
       return sortedProducts.sort((a, b) => {
         if (a.featured && !b.featured) return -1;
@@ -324,7 +353,7 @@ function sortProducts(products, sortBy = 'featured') {
  * @returns {Array} Array de productos destacados
  */
 function getFeaturedProducts() {
-  return products.filter(product => product.featured);
+  return products.filter((product) => product.featured);
 }
 
 /**
@@ -332,7 +361,7 @@ function getFeaturedProducts() {
  * @returns {Array} Array de productos en oferta
  */
 function getOnSaleProducts() {
-  return products.filter(product => product.onSale);
+  return products.filter((product) => product.onSale);
 }
 
 /**
@@ -341,7 +370,7 @@ function getOnSaleProducts() {
  * @returns {Object|null} Producto encontrado o null
  */
 function getProductById(id) {
-  return products.find(product => product.id === id) || null;
+  return products.find((product) => product.id === id) || null;
 }
 
 /**
@@ -353,11 +382,11 @@ function getProductById(id) {
 function getRelatedProducts(productId, limit = 4) {
   const currentProduct = getProductById(productId);
   if (!currentProduct) return [];
-  
+
   return products
-    .filter(product => 
-      product.id !== productId && 
-      product.category === currentProduct.category
+    .filter(
+      (product) =>
+        product.id !== productId && product.category === currentProduct.category
     )
     .slice(0, limit);
 }
@@ -367,7 +396,7 @@ function getRelatedProducts(productId, limit = 4) {
  * @returns {Array} Array de categorías únicas
  */
 function getCategories() {
-  const categories = [...new Set(products.map(product => product.category))];
+  const categories = [...new Set(products.map((product) => product.category))];
   return categories;
 }
 
@@ -376,7 +405,7 @@ function getCategories() {
  * @returns {Array} Array de colores únicos
  */
 function getAvailableColors() {
-  const colors = [...new Set(products.flatMap(product => product.colors))];
+  const colors = [...new Set(products.flatMap((product) => product.colors))];
   return colors.sort();
 }
 
@@ -385,7 +414,7 @@ function getAvailableColors() {
  * @returns {Array} Array de tallas únicas
  */
 function getAvailableSizes() {
-  const sizes = [...new Set(products.flatMap(product => product.sizes))];
+  const sizes = [...new Set(products.flatMap((product) => product.sizes))];
   return sizes.sort();
 }
 
@@ -395,11 +424,11 @@ function getAvailableSizes() {
  */
 function getPriceRange() {
   if (products.length === 0) return { min: 0, max: 0 };
-  
-  const prices = products.map(product => product.price);
+
+  const prices = products.map((product) => product.price);
   return {
     min: Math.min(...prices),
-    max: Math.max(...prices)
+    max: Math.max(...prices),
   };
 }
 
@@ -410,10 +439,10 @@ function getPriceRange() {
 function getProductStats() {
   return {
     total: products.length,
-    featured: products.filter(p => p.featured).length,
-    onSale: products.filter(p => p.onSale).length,
+    featured: products.filter((p) => p.featured).length,
+    onSale: products.filter((p) => p.onSale).length,
     categories: getCategories().length,
-    outOfStock: products.filter(p => p.stock === 0).length
+    outOfStock: products.filter((p) => p.stock === 0).length,
   };
 }
 
@@ -433,5 +462,5 @@ export {
   getAvailableColors,
   getAvailableSizes,
   getPriceRange,
-  getProductStats
+  getProductStats,
 };
