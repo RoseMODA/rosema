@@ -6,7 +6,7 @@
   <title>Rosema Moda Familiar - Catálogo</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="public/style.css">
 </head>
 
  
@@ -47,7 +47,7 @@
 
     <div class="flex justify-center absolute top-1 left-1/2 -translate-x-1/2 z-10">
       <a href="#" id="home-logo-link" class="cursor-pointer">
-        <img src="assets/img/rosemalogysubwhite.png" alt="Logo Rosema moda familiar" class="h-32 w-auto select-none hover:opacity-90 transition-opacity" />
+        <img src="public/img/rosemalogysubwhite.png" alt="Logo Rosema moda familiar" class="h-32 w-auto select-none hover:opacity-90 transition-opacity" />
       </a>
     </div>
 
@@ -92,20 +92,20 @@
   <a href="index.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Inicio</a>
   <a href="#" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Nosotros</a>
   <a href="#" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Pedidos</a>
-  <a href="categories/mujer.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Mujer</a>
-  <a href="categories/hombre.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Hombre</a>
-  <a href="categories/ninos.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Niños/Bebés</a>
-  <a href="categories/otros.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Otros</a>
+  <a href="public/categories/mujer.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Mujer</a>
+  <a href="public/categories/hombre.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Hombre</a>
+  <a href="public/categories/ninos.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Niños/Bebés</a>
+  <a href="public/categories/otros.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Otros</a>
 </div>
 
   <!-- Secondary navigation categories -->
   <nav aria-label="Categorías de productos"
        class="category-nav hidden sm:flex justify-center space-x-10 mt-5 mb-2 select-none font-semibold font-mono max-w-5xl mx-auto px-4">
 
-    <a href="categories/mujer.html" tabindex="0">Mujer</a>
-    <a href="categories/hombre.html" tabindex="0">Hombre</a>
-    <a href="categories/ninos.html" tabindex="0">Niños/Bebes</a>
-    <a href="categories/otros.html" tabindex="0">Otros</a>
+    <a href="public/categories/mujer.html" tabindex="0">Mujer</a>
+    <a href="public/categories/hombre.html" tabindex="0">Hombre</a>
+    <a href="public/categories/ninos.html" tabindex="0">Niños/Bebes</a>
+    <a href="public/categories/otros.html" tabindex="0">Otros</a>
   </nav>
 
   <!-- "Ver todo" button -->
@@ -121,27 +121,27 @@
       <button class="arrow-btn prev" aria-label="Desplazar carrusel a la izquierda" tabindex="0">❮</button>
       <div class="carousel-track" id="carousel-track" aria-live="polite" aria-atomic="true">
         <article class="carousel-item" role="group" aria-label="Remera Princesa, precio 12.000 pesos argentinos">
-          <img src="assets/img/IMG_1319.jpg" loading="lazy" alt="Remera Princesa" onerror="this.style.display='none';"/>
+          <img src="public/img/IMG_1319.jpg" loading="lazy" alt="Remera Princesa" onerror="this.style.display='none';"/>
           <h3 class="product-title">Remera Princesa</h3>
           <p class="product-price">$ 12.000</p>
           <p class="product-sku">M-REMP01</p>
         </article> 
         
         <article class="carousel-item" role="group" aria-label="Remera Combinada, precio 6.000 pesos argentinos">
-          <img src="assets/img/IMG_1294.JPG" loading="lazy" alt="Remera Combinada" onerror="this.style.display='none';"/>
+          <img src="public/img/IMG_1294.JPG" loading="lazy" alt="Remera Combinada" onerror="this.style.display='none';"/>
           <h3 class="product-title">Remera Combinada</h3>
           <p class="product-price">$ 6.000</p>
           <p class="product-sku">M-REMP01</p>
         </article>
 
         <article class="carousel-item" role="group" aria-label="Chaleco Engomado, precio 40.000 pesos argentinos">
-          <img src="assets/img/IMG_1313.jpg" loading="lazy" alt="Chaleco Engomado" onerror="this.style.display='none';"/>
+          <img src="public/img/IMG_1313.jpg" loading="lazy" alt="Chaleco Engomado" onerror="this.style.display='none';"/>
           <h3 class="product-title">Chaleco Engomado</h3>
           <p class="product-sku">M-REMP01</p>
         </article>
 
         <article class="carousel-item" role="group" aria-label="Sueter Lana, precio 30.000 pesos argentinos">
-          <img src="assets/img/IMG_1300.JPG" loading="lazy" alt="Sueter Lana" onerror="this.style.display='none';"/>
+          <img src="public/img/IMG_1300.JPG" loading="lazy" alt="Sueter Lana" onerror="this.style.display='none';"/>
           <h3 class="product-title">Sueter Lana</h3>
           <p class="product-price">$ 30.000</p>
           <p class="product-sku">M-REMP01</p>
@@ -157,7 +157,7 @@
       <button class="arrow-btn prev" aria-label="Desplazar carrusel de ofertas a la izquierda" tabindex="0">❮</button>
       <div class="carousel-track" id="carousel-track-ofertas" aria-live="polite" aria-atomic="true">
         <article class="carousel-item" role="group" aria-label="Remera Descuento, precio 9.000 pesos argentinos">
-          <img src="assets/img/IMG_1287.JPG" loading="lazy" alt="Remera Princesa en Oferta" onerror="this.style.display='none';"/>
+          <img src="public/img/IMG_1287.JPG" loading="lazy" alt="Remera Princesa en Oferta" onerror="this.style.display='none';"/>
           <h3 class="product-title">Remera Princesa</h3>
           <p class="product-price line-through text-gray-500">$ 12.000</p>
           <p class="product-price text-red-600 font-bold">$ 9.000</p>
@@ -165,7 +165,7 @@
         </article>
 
         <article class="carousel-item" role="group" aria-label="Remera Combinada Oferta, precio 5.000 pesos argentinos">
-          <img src="assets/img/IMG_1298.JPG" loading="lazy" alt="Remera Combinada en Oferta" onerror="this.style.display='none';"/>
+          <img src="public/img/IMG_1298.JPG" loading="lazy" alt="Remera Combinada en Oferta" onerror="this.style.display='none';"/>
           <h3 class="product-title">Remera Combinada</h3>
           <p class="product-price line-through text-gray-500">$ 6.000</p>
           <p class="product-price text-red-600 font-bold">$ 5.000</p>
@@ -173,7 +173,7 @@
         </article>
 
         <article class="carousel-item" role="group" aria-label="Chaleco Engomado Oferta, precio 35.000 pesos argentinos">
-          <img src="assets/img/IMG_1308.JPG" loading="lazy" alt="Chaleco Engomado en Oferta" onerror="this.style.display='none';"/>
+          <img src="public/img/IMG_1308.JPG" loading="lazy" alt="Chaleco Engomado en Oferta" onerror="this.style.display='none';"/>
           <h3 class="product-title">Chaleco Engomado</h3>
           <p class="product-price line-through text-gray-500">$ 40.000</p>
           <p class="product-price text-red-600 font-bold">$ 35.000</p>
@@ -181,7 +181,7 @@
         </article>
 
         <article class="carousel-item" role="group" aria-label="Sueter Lana Oferta, precio 25.000 pesos argentinos">
-          <img src="assets/img/IMG_1301.JPG" loading="lazy" alt="Sueter Lana en Oferta" onerror="this.style.display='none';"/>
+          <img src="public/img/IMG_1301.JPG" loading="lazy" alt="Sueter Lana en Oferta" onerror="this.style.display='none';"/>
           <h3 class="product-title">Sueter Lana</h3>
           <p class="product-price line-through text-gray-500">$ 30.000</p>
           <p class="product-price text-red-600 font-bold">$ 25.000</p>
@@ -194,7 +194,7 @@
     <!-- Category Carousels Section -->
     <!-- Mujer Category -->
     <div class="category-carousel-section">
-      <div class="category-carousel-title">RECOMENDADOS PARA MUJER <a href="categories/mujer.html" class="ver-mas-btn">Ver Más</a></div> 
+      <div class="category-carousel-title">RECOMENDADOS PARA MUJER <a href="public/categories/mujer.html" class="ver-mas-btn">Ver Más</a></div> 
       <section class="carousel" aria-label="Productos recomendados para mujer">
         <button class="arrow-btn prev" aria-label="Desplazar carrusel mujer a la izquierda" tabindex="0">❮</button>
         <div class="carousel-track" id="carousel-track-mujer" aria-live="polite" aria-atomic="true">
@@ -207,7 +207,7 @@
 
     <!-- Hombre Category -->
     <div class="category-carousel-section">
-      <div class="category-carousel-title">RECOMENDADOS PARA HOMBRE <a href="categories/hombre.html" class="ver-mas-btn">Ver Más</a></div>
+      <div class="category-carousel-title">RECOMENDADOS PARA HOMBRE <a href="public/categories/hombre.html" class="ver-mas-btn">Ver Más</a></div>
       <section class="carousel" aria-label="Productos recomendados para hombre">
         <button class="arrow-btn prev" aria-label="Desplazar carrusel hombre a la izquierda" tabindex="0">❮</button>
         <div class="carousel-track" id="carousel-track-hombre" aria-live="polite" aria-atomic="true">
@@ -220,7 +220,7 @@
 
     <!-- Niños Category -->
     <div class="category-carousel-section">
-      <div class="category-carousel-title">RECOMENDADOS PARA NIÑOS  <a href="categories/ninos.html" class="ver-mas-btn">Ver Más</a></div>
+      <div class="category-carousel-title">RECOMENDADOS PARA NIÑOS  <a href="public/categories/ninos.html" class="ver-mas-btn">Ver Más</a></div>
       <section class="carousel" aria-label="Productos recomendados para niños">
         <button class="arrow-btn prev" aria-label="Desplazar carrusel niños a la izquierda" tabindex="0">❮</button>
         <div class="carousel-track" id="carousel-track-ninos" aria-live="polite" aria-atomic="true">
@@ -233,7 +233,7 @@
 
     <!-- Otros Category -->
     <div class="category-carousel-section">
-      <div class="category-carousel-title">OTROS PRODUCTOS <a href="categories/otros.html" class="ver-mas-btn">Ver Más</a></div>
+      <div class="category-carousel-title">OTROS PRODUCTOS <a href="public/categories/otros.html" class="ver-mas-btn">Ver Más</a></div>
       <section class="carousel" aria-label="Otros productos recomendados">
         <button class="arrow-btn prev" aria-label="Desplazar carrusel otros a la izquierda" tabindex="0">❮</button>
         <div class="carousel-track" id="carousel-track-otros" aria-live="polite" aria-atomic="true">
@@ -469,7 +469,7 @@
       <div>
         <h3 class="uppercase font-semibold mb-5 tracking-wide text-gray-400">Medios de pago</h3>
         <div class="flex items-center space-x-4 mb-6">
-          <img src="assets/icons/mercado-pago-logo.svg" class="h-10 w-auto object-contain" />
+          <img src="public/icons/mercado-pago-logo.svg" class="h-10 w-auto object-contain" />
           <button class="border border-white py-1 px-4 text-white text-xs uppercase tracking-wider hover:bg-white hover:text-gray-900 transition rounded">Efectivo</button>
         </div>
         <h3 class="uppercase font-semibold mb-3 tracking-wide text-gray-400">Medios de envío</h3>
@@ -532,8 +532,8 @@
     </svg>
   </a>
 
-   <script type="module" src="/js/main.js"></script>
-   <script src="js/firebase.js"></script>
+   <script type="module" src="/src/ecommerce/main.js"></script>
+   <script src="/src/firebase.js"></script>
    
 
   
