@@ -116,10 +116,10 @@ const categorySubcategories = {
  * Carga productos desde Firebase Firestore
  * @returns {Promise<Array>} Array de productos desde Firebase
  */
-async function loadProductsFromFirebase() {
+async function loadProducts() {
   try {
-    console.log("🔥 Intentando cargar productos desde Firebase...");
-    const productsCollection = collection(db, "products");
+    console.log("🔥 Cargando productos desde Firebase...");
+    const productsCollection = collection(db, "productos");
     const querySnapshot = await getDocs(productsCollection);
     const firebaseProducts = [];
 
@@ -130,6 +130,7 @@ async function loadProductsFromFirebase() {
       });
     });
 
+    products = firebaseProducts;
     console.log(
       `✅ Productos cargados desde Firebase: ${firebaseProducts.length} productos`
     );
@@ -161,51 +162,14 @@ async function loadProductsFromJSON() {
 }
 
 /**
- * Carga los productos (Firebase primero, JSON como fallback)
- * @returns {Promise<Array>} Array de productos
- */
-async function loadProducts() {
-  try {
-    // Intentar cargar desde Firebase primero
-    try {
-      products = await loadProductsFromFirebase();
-      if (products.length > 0) {
-        return products;
-      }
-    } catch (firebaseError) {
-      console.warn("⚠️ Firebase no disponible, usando fallback a JSON");
-    }
-
-    // Fallback a JSON si Firebase falla o no hay productos
-    products = await loadProductsFromJSON();
-    return products;
-  } catch (error) {
-    console.error("❌ Error al cargar productos:", error);
-    // Mostrar notificación de error al usuario
-    if (typeof showNotification === "function") {
-      showNotification(
-        "Error al cargar los productos. Por favor, recarga la página.",
-        "error"
-      );
-    }
-    // Retornar array vacío para evitar errores en el resto de la aplicación
-    products = [];
-    return products;
-  }
-}
-
-/**
- * Carga productos para la página principal (desde la raíz)
+ * Carga productos para la página principal (alias de loadProducts)
  * @returns {Promise<Array>} Array de productos
  */
 async function loadProductsFromRoot() {
   try {
     // Intentar cargar desde Firebase primero
     try {
-      products = await loadProductsFromFirebase();
-      if (products.length > 0) {
-        return products;
-      }
+      return loadProducts();
     } catch (firebaseError) {
       console.warn("⚠️ Firebase no disponible, usando fallback a JSON");
     }
