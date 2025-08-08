@@ -20,17 +20,16 @@ async function initFacturas(container) {
 
     // Cargar facturas
     currentInvoices = await getInvoices();
-    
+
     // Renderizar interfaz
     container.innerHTML = createFacturasHTML();
-    
+
     // Configurar event listeners
     setupFacturasEvents();
-    
   } catch (error) {
-    console.error('❌ Error al cargar facturas:', error);
-    showNotification('Error al cargar facturas', 'error');
-    
+    console.error("❌ Error al cargar facturas:", error);
+    showNotification("Error al cargar facturas", "error");
+
     container.innerHTML = `
       <div class="text-center py-12">
         <h3 class="text-xl font-semibold text-red-600 mb-2">Error al cargar facturas</h3>
@@ -65,7 +64,9 @@ function createFacturasHTML() {
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-gray-600">Facturas del Mes</p>
-            <p class="text-2xl font-bold text-gray-900">${currentInvoices.length}</p>
+            <p class="text-2xl font-bold text-gray-900">${
+              currentInvoices.length
+            }</p>
           </div>
           <div class="text-blue-600 text-2xl">📊</div>
         </div>
@@ -75,7 +76,9 @@ function createFacturasHTML() {
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-gray-600">Total Facturado</p>
-            <p class="text-2xl font-bold text-gray-900">${formatCurrency(calculateTotalInvoiced())}</p>
+            <p class="text-2xl font-bold text-gray-900">${formatCurrency(
+              calculateTotalInvoiced()
+            )}</p>
           </div>
           <div class="text-green-600 text-2xl">💰</div>
         </div>
@@ -85,7 +88,9 @@ function createFacturasHTML() {
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-gray-600">Pendientes</p>
-            <p class="text-2xl font-bold text-gray-900">${currentInvoices.filter(inv => inv.status === 'pending').length}</p>
+            <p class="text-2xl font-bold text-gray-900">${
+              currentInvoices.filter((inv) => inv.status === "pending").length
+            }</p>
           </div>
           <div class="text-yellow-600 text-2xl">⏳</div>
         </div>
@@ -95,7 +100,9 @@ function createFacturasHTML() {
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-gray-600">Aprobadas</p>
-            <p class="text-2xl font-bold text-gray-900">${currentInvoices.filter(inv => inv.status === 'approved').length}</p>
+            <p class="text-2xl font-bold text-gray-900">${
+              currentInvoices.filter((inv) => inv.status === "approved").length
+            }</p>
           </div>
           <div class="text-green-600 text-2xl">✅</div>
         </div>
@@ -262,39 +269,57 @@ function renderInvoicesTable() {
     `;
   }
 
-  return currentInvoices.map(invoice => `
+  return currentInvoices
+    .map(
+      (invoice) => `
     <tr class="hover:bg-gray-50">
       <td class="px-6 py-4 whitespace-nowrap">
         <div class="text-sm font-medium text-blue-600">${invoice.number}</div>
       </td>
       <td class="px-6 py-4 whitespace-nowrap">
         <div class="text-sm text-gray-900">${invoice.customer}</div>
-        ${invoice.cuit ? `<div class="text-xs text-gray-500">${invoice.cuit}</div>` : ''}
+        ${
+          invoice.cuit
+            ? `<div class="text-xs text-gray-500">${invoice.cuit}</div>`
+            : ""
+        }
       </td>
       <td class="px-6 py-4 whitespace-nowrap">
         <div class="text-sm text-gray-900">${formatDate(invoice.date)}</div>
       </td>
       <td class="px-6 py-4 whitespace-nowrap">
-        <div class="text-sm font-semibold text-gray-900">${formatCurrency(invoice.amount)}</div>
+        <div class="text-sm font-semibold text-gray-900">${formatCurrency(
+          invoice.amount
+        )}</div>
       </td>
       <td class="px-6 py-4 whitespace-nowrap">
-        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(invoice.status)}">
+        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+          invoice.status
+        )}">
           ${getStatusText(invoice.status)}
         </span>
       </td>
       <td class="px-6 py-4 whitespace-nowrap">
-        <div class="text-sm text-gray-900">${invoice.arcaStatus || 'No enviada'}</div>
+        <div class="text-sm text-gray-900">${
+          invoice.arcaStatus || "No enviada"
+        }</div>
       </td>
       <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-        <button onclick="viewInvoice('${invoice.id}')" class="text-blue-600 hover:text-blue-900 mr-3">
+        <button onclick="viewInvoice('${
+          invoice.id
+        }')" class="text-blue-600 hover:text-blue-900 mr-3">
           Ver
         </button>
-        <button onclick="sendToArca('${invoice.id}')" class="text-green-600 hover:text-green-900">
+        <button onclick="sendToArca('${
+          invoice.id
+        }')" class="text-green-600 hover:text-green-900">
           Enviar ARCA
         </button>
       </td>
     </tr>
-  `).join('');
+  `
+    )
+    .join("");
 }
 
 /**
@@ -302,54 +327,52 @@ function renderInvoicesTable() {
  */
 function setupFacturasEvents() {
   // Botón nueva factura
-  const btnNuevaFactura = document.getElementById('btn-nueva-factura');
+  const btnNuevaFactura = document.getElementById("btn-nueva-factura");
   if (btnNuevaFactura) {
-    btnNuevaFactura.addEventListener('click', openInvoiceModal);
+    btnNuevaFactura.addEventListener("click", openInvoiceModal);
   }
 
   // Botón sincronizar ARCA
-  const btnSincronizar = document.getElementById('btn-sincronizar-arca');
+  const btnSincronizar = document.getElementById("btn-sincronizar-arca");
   if (btnSincronizar) {
-    btnSincronizar.addEventListener('click', handleSyncArca);
+    btnSincronizar.addEventListener("click", handleSyncArca);
   }
 
   // Modal events
-  const cancelBtn = document.getElementById('cancel-invoice');
-  const saveBtn = document.getElementById('save-invoice');
-  
+  const cancelBtn = document.getElementById("cancel-invoice");
+  const saveBtn = document.getElementById("save-invoice");
+
   if (cancelBtn) {
-    cancelBtn.addEventListener('click', closeInvoiceModal);
+    cancelBtn.addEventListener("click", closeInvoiceModal);
   }
-  
+
   if (saveBtn) {
-    saveBtn.addEventListener('click', handleSaveInvoice);
+    saveBtn.addEventListener("click", handleSaveInvoice);
   }
 }
+
+import { db } from "../firebase.js";
+import { collection, getDocs } from "firebase/firestore";
 
 /**
  * Obtiene las facturas
  */
 async function getInvoices() {
   try {
-    const db = window.firebaseDB();
-    if (!db) {
-      console.warn('Firebase no disponible, usando datos de ejemplo');
-      return getExampleInvoices();
-    }
-
-    const querySnapshot = await db.collection('invoices').get();
+    const invoicesRef = collection(db, "invoices");
+    const querySnapshot = await getDocs(invoicesRef);
     const invoices = [];
-    
+
     querySnapshot.forEach((doc) => {
       invoices.push({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       });
     });
-    
+
     return invoices.length > 0 ? invoices : getExampleInvoices();
   } catch (error) {
-    console.error('❌ Error al obtener facturas:', error);
+    console.error("❌ Error al obtener facturas:", error);
     return getExampleInvoices();
   }
 }
@@ -360,29 +383,29 @@ async function getInvoices() {
 function getExampleInvoices() {
   return [
     {
-      id: 'inv1',
-      number: 'A-0001-00000001',
-      customer: 'María González',
-      cuit: '20-12345678-9',
-      type: 'A',
+      id: "inv1",
+      number: "A-0001-00000001",
+      customer: "María González",
+      cuit: "20-12345678-9",
+      type: "A",
       amount: 15000,
-      concept: 'Venta de ropa',
+      concept: "Venta de ropa",
       date: new Date().toISOString(),
-      status: 'approved',
-      arcaStatus: 'Enviada'
+      status: "approved",
+      arcaStatus: "Enviada",
     },
     {
-      id: 'inv2',
-      number: 'B-0001-00000002',
-      customer: 'Juan Pérez',
-      cuit: '23-87654321-0',
-      type: 'B',
+      id: "inv2",
+      number: "B-0001-00000002",
+      customer: "Juan Pérez",
+      cuit: "23-87654321-0",
+      type: "B",
       amount: 8500,
-      concept: 'Venta de accesorios',
+      concept: "Venta de accesorios",
       date: new Date(Date.now() - 86400000).toISOString(),
-      status: 'pending',
-      arcaStatus: 'Pendiente'
-    }
+      status: "pending",
+      arcaStatus: "Pendiente",
+    },
   ];
 }
 
@@ -390,7 +413,10 @@ function getExampleInvoices() {
  * Calcula el total facturado
  */
 function calculateTotalInvoiced() {
-  return currentInvoices.reduce((sum, invoice) => sum + (invoice.amount || 0), 0);
+  return currentInvoices.reduce(
+    (sum, invoice) => sum + (invoice.amount || 0),
+    0
+  );
 }
 
 /**
@@ -398,10 +424,14 @@ function calculateTotalInvoiced() {
  */
 function getStatusColor(status) {
   switch (status) {
-    case 'approved': return 'bg-green-100 text-green-800';
-    case 'pending': return 'bg-yellow-100 text-yellow-800';
-    case 'rejected': return 'bg-red-100 text-red-800';
-    default: return 'bg-gray-100 text-gray-800';
+    case "approved":
+      return "bg-green-100 text-green-800";
+    case "pending":
+      return "bg-yellow-100 text-yellow-800";
+    case "rejected":
+      return "bg-red-100 text-red-800";
+    default:
+      return "bg-gray-100 text-gray-800";
   }
 }
 
@@ -410,10 +440,14 @@ function getStatusColor(status) {
  */
 function getStatusText(status) {
   switch (status) {
-    case 'approved': return 'Aprobada';
-    case 'pending': return 'Pendiente';
-    case 'rejected': return 'Rechazada';
-    default: return 'Desconocido';
+    case "approved":
+      return "Aprobada";
+    case "pending":
+      return "Pendiente";
+    case "rejected":
+      return "Rechazada";
+    default:
+      return "Desconocido";
   }
 }
 
@@ -421,17 +455,17 @@ function getStatusText(status) {
  * Abre el modal de factura
  */
 function openInvoiceModal() {
-  const modal = document.getElementById('invoice-modal');
-  document.getElementById('invoice-form').reset();
-  modal.classList.remove('hidden');
+  const modal = document.getElementById("invoice-modal");
+  document.getElementById("invoice-form").reset();
+  modal.classList.remove("hidden");
 }
 
 /**
  * Cierra el modal de factura
  */
 function closeInvoiceModal() {
-  const modal = document.getElementById('invoice-modal');
-  modal.classList.add('hidden');
+  const modal = document.getElementById("invoice-modal");
+  modal.classList.add("hidden");
 }
 
 /**
@@ -439,27 +473,26 @@ function closeInvoiceModal() {
  */
 async function handleSaveInvoice() {
   try {
-    const customer = document.getElementById('invoice-customer').value.trim();
-    const amount = parseFloat(document.getElementById('invoice-amount').value);
-    
+    const customer = document.getElementById("invoice-customer").value.trim();
+    const amount = parseFloat(document.getElementById("invoice-amount").value);
+
     if (!customer || !amount) {
-      showNotification('Cliente y monto son requeridos', 'error');
+      showNotification("Cliente y monto son requeridos", "error");
       return;
     }
 
-    showNotification('Factura creada exitosamente', 'success');
+    showNotification("Factura creada exitosamente", "success");
     closeInvoiceModal();
-    
+
     // Recargar la página para mostrar cambios
     setTimeout(() => {
       if (window.POS && window.POS.loadPage) {
-        window.POS.loadPage('facturas');
+        window.POS.loadPage("facturas");
       }
     }, 1000);
-
   } catch (error) {
-    console.error('❌ Error al crear factura:', error);
-    showNotification('Error al crear factura', 'error');
+    console.error("❌ Error al crear factura:", error);
+    showNotification("Error al crear factura", "error");
   }
 }
 
@@ -467,22 +500,22 @@ async function handleSaveInvoice() {
  * Maneja la sincronización con ARCA
  */
 function handleSyncArca() {
-  showNotification('Sincronizando con ARCA...', 'info');
-  
+  showNotification("Sincronizando con ARCA...", "info");
+
   // Simular sincronización
   setTimeout(() => {
-    showNotification('Sincronización completada', 'success');
+    showNotification("Sincronización completada", "success");
   }, 2000);
 }
 
 // Funciones globales
 window.viewInvoice = (invoiceId) => {
-  showNotification('Vista de factura en desarrollo', 'info');
+  showNotification("Vista de factura en desarrollo", "info");
 };
 
 window.sendToArca = (invoiceId) => {
-  showNotification('Enviando a ARCA...', 'info');
+  showNotification("Enviando a ARCA...", "info");
   setTimeout(() => {
-    showNotification('Factura enviada a ARCA exitosamente', 'success');
+    showNotification("Factura enviada a ARCA exitosamente", "success");
   }, 1500);
 };

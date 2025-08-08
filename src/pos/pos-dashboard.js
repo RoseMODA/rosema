@@ -7,13 +7,13 @@ import { getProducts, getLowStockProducts } from "./firebase-products.js";
 
 // Funciones auxiliares para formateo
 function formatNumber(num) {
-  return new Intl.NumberFormat("es-ES").format(num || 0);
+  return new Intl.NumberFormat('es-ES').format(num || 0);
 }
 
 function formatCurrency(amount) {
-  return new Intl.NumberFormat("es-ES", {
-    style: "currency",
-    currency: "ARS",
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: 'ARS'
   }).format(amount || 0);
 }
 

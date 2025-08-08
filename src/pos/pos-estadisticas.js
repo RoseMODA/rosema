@@ -4,7 +4,7 @@
  */
 
 import { getProducts } from "./firebase-products.js";
-import { db } from "./firebase.js";
+import { db } from "../firebase.js";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 
 /**

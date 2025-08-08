@@ -1,32 +1,31 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>POS - Rosema Moda Familiar</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- Firebase CDN -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
-  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: 'Inter', sans-serif; }
-    .sidebar-active { background-color: rgba(255, 255, 255, 0.1); }
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .sidebar-active {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
   </style>
 </head>
+
 <body class="bg-gray-100 flex h-screen overflow-hidden">
-  
   <!-- Sidebar -->
   <div class="w-80 bg-[#d63629] text-white flex flex-col">
     <!-- Logo -->
     <div class="p-6 border-b border-red-500">
       <div class="flex items-center space-x-3">
         <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-          <img src="/public/img/rosemalog.svg" alt="Rosema" class="w-8 h-8" onerror="this.style.display='none'">
+          <img src="/img/rosemalog.svg" alt="Rosema" class="w-8 h-8" onerror="this.style.display='none'" />
           <span class="text-red-600 font-bold text-lg" style="display: none;">R</span>
         </div>
         <div>
@@ -40,13 +39,15 @@
     <nav class="flex-1 py-6">
       <ul class="space-y-2 px-4">
         <li>
-          <button id="nav-inicio" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-red-500 transition-colors flex items-center space-x-3 sidebar-active">
+          <button id="nav-inicio"
+            class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-red-500 transition-colors flex items-center space-x-3 sidebar-active">
             <span class="text-lg">🏠</span>
             <span class="font-medium">Inicio</span>
           </button>
         </li>
         <li>
-          <button id="nav-estadisticas" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-red-500 transition-colors flex items-center space-x-3">
+          <button id="nav-estadisticas"
+            class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-red-500 transition-colors flex items-center space-x-3">
             <span class="text-lg">📊</span>
             <span class="font-medium">Estadísticas</span>
           </button>
@@ -55,25 +56,29 @@
           <h3 class="px-4 py-2 text-sm font-semibold text-red-200 uppercase tracking-wide">Gestión</h3>
         </li>
         <li>
-          <button id="nav-ventas" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-red-500 transition-colors flex items-center space-x-3">
+          <button id="nav-ventas"
+            class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-red-500 transition-colors flex items-center space-x-3">
             <span class="text-lg">🛒</span>
             <span class="font-medium">Ventas</span>
           </button>
         </li>
         <li>
-          <button id="nav-productos" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-red-500 transition-colors flex items-center space-x-3">
+          <button id="nav-productos"
+            class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-red-500 transition-colors flex items-center space-x-3">
             <span class="text-lg">📦</span>
             <span class="font-medium">Productos</span>
           </button>
         </li>
         <li>
-          <button id="nav-proveedores" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-red-500 transition-colors flex items-center space-x-3">
+          <button id="nav-proveedores"
+            class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-red-500 transition-colors flex items-center space-x-3">
             <span class="text-lg">🏢</span>
             <span class="font-medium">Proveedores</span>
           </button>
         </li>
         <li>
-          <button id="nav-facturas" class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-red-500 transition-colors flex items-center space-x-3">
+          <button id="nav-facturas"
+            class="nav-item w-full text-left px-4 py-3 rounded-lg hover:bg-red-500 transition-colors flex items-center space-x-3">
             <span class="text-lg">📄</span>
             <span class="font-medium">Facturas ARCA</span>
           </button>
@@ -131,7 +136,9 @@
   <!-- Global Confirmation Modal -->
   <div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
     <div class="flex items-center justify-center min-h-screen p-4">
-      <div class="bg-white rounded-lg shadow-xl max-w-md w-full transform transition-all duration-200 scale-95 opacity-0" id="confirmation-modal-content">
+      <div
+        class="bg-white rounded-lg shadow-xl max-w-md w-full transform transition-all duration-200 scale-95 opacity-0"
+        id="confirmation-modal-content">
         <div class="px-6 py-4 border-b border-gray-200">
           <h3 id="confirmation-modal-title" class="text-lg font-medium text-gray-900">Confirmación</h3>
         </div>
@@ -139,10 +146,12 @@
           <!-- Mensaje dinámico se insertará aquí -->
         </div>
         <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-          <button id="confirmation-cancel" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
+          <button id="confirmation-cancel"
+            class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
             Cancelar
           </button>
-          <button id="confirmation-confirm" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+          <button id="confirmation-confirm"
+            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
             Confirmar
           </button>
         </div>
@@ -151,21 +160,22 @@
   </div>
 
   <!-- Cargar Firebase config primero -->
-  <script src="/src/firebase.js"></script>
-  
+  <script type="module" src="/src/firebase.js"></script>
+
   <!-- Cargar módulos del POS en orden correcto -->
-  <script src="/src/pos/pos-utils.js" defer></script>
-  <script src="/src/pos/firebase-products.js" defer></script>
-  <script src="/src/pos/pos-dashboard.js" defer></script>
-  <script src="/src/pos/pos-productos-fixed.js" defer></script>
-  
-  <script src="/src/pos/pos-ventas.js" defer></script>
-  <script src="/src/pos/pos-ventas-quick.js" defer></script>
-  <script src="/src/pos/pos-estadisticas.js" defer></script>
-  <script src="/src/pos/pos-proveedores.js" defer></script>
-  <script src="/src/pos/pos-facturas.js" defer></script>
-  <script src="/src/pos/pos-ventas-fix.js" defer></script>
-  <script src="/src/pos/pos-main.js" defer></script>
-  
+  <script type="module" src="/src/pos/pos-utils.js"></script>
+  <script type="module" src="/src/pos/firebase-products.js"></script>
+  <script type="module" src="/src/pos/pos-dashboard.js"></script>
+  <script type="module" src="/src/pos/pos-productos-fixed.js"></script>
+
+  <script type="module" src="/src/pos/pos-ventas.js"></script>
+  <script type="module" src="/src/pos/pos-ventas-quick.js"></script>
+  <script type="module" src="/src/pos/pos-estadisticas.js"></script>
+  <script type="module" src="/src/pos/pos-proveedores.js"></script>
+  <script type="module" src="/src/pos/pos-facturas.js"></script>
+  <script type="module" src="/src/pos/pos-ventas-fix.js"></script>
+  <script type="module" src="/src/pos/pos-main.js"></script>
+
 </body>
+
 </html>

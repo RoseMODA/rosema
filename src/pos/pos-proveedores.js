@@ -20,17 +20,16 @@ async function initProveedores(container) {
 
     // Cargar proveedores
     currentProviders = await getProviders();
-    
+
     // Renderizar interfaz
     container.innerHTML = createProveedoresHTML();
-    
+
     // Configurar event listeners
     setupProveedoresEvents();
-    
   } catch (error) {
-    console.error('❌ Error al cargar proveedores:', error);
-    showNotification('Error al cargar proveedores', 'error');
-    
+    console.error("❌ Error al cargar proveedores:", error);
+    showNotification("Error al cargar proveedores", "error");
+
     container.innerHTML = `
       <div class="text-center py-12">
         <h3 class="text-xl font-semibold text-red-600 mb-2">Error al cargar proveedores</h3>
@@ -79,15 +78,20 @@ function createProveedoresHTML() {
     <!-- Contador de proveedores -->
     <div class="mb-4">
       <p class="text-sm text-gray-600">
-        <span id="providers-count">${currentProviders.length}</span> proveedor${currentProviders.length !== 1 ? 'es' : ''}
+        <span id="providers-count">${currentProviders.length}</span> proveedor${
+    currentProviders.length !== 1 ? "es" : ""
+  }
       </p>
     </div>
 
     <!-- Lista de proveedores -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="providers-grid">
-      ${currentProviders.length > 0 ? 
-        currentProviders.map(provider => createProviderCard(provider)).join('') :
-        `<div class="col-span-full text-center py-12">
+      ${
+        currentProviders.length > 0
+          ? currentProviders
+              .map((provider) => createProviderCard(provider))
+              .join("")
+          : `<div class="col-span-full text-center py-12">
           <div class="text-4xl mb-4">🏢</div>
           <h3 class="text-xl font-semibold text-gray-600 mb-2">No hay proveedores</h3>
           <p class="text-gray-500 mb-4">Agrega tu primer proveedor para comenzar</p>
@@ -158,30 +162,50 @@ function createProviderCard(provider) {
       <div class="flex items-start justify-between mb-4">
         <div class="flex-1">
           <h3 class="text-lg font-semibold text-gray-900">${provider.name}</h3>
-          ${provider.email ? `<p class="text-sm text-gray-600">${provider.email}</p>` : ''}
-          ${provider.phone ? `<p class="text-sm text-gray-600">${provider.phone}</p>` : ''}
+          ${
+            provider.email
+              ? `<p class="text-sm text-gray-600">${provider.email}</p>`
+              : ""
+          }
+          ${
+            provider.phone
+              ? `<p class="text-sm text-gray-600">${provider.phone}</p>`
+              : ""
+          }
         </div>
         <div class="flex space-x-2">
-          <button onclick="editProvider('${provider.id}')" class="text-blue-600 hover:text-blue-800">
+          <button onclick="editProvider('${
+            provider.id
+          }')" class="text-blue-600 hover:text-blue-800">
             ✏️
           </button>
-          <button onclick="deleteProvider('${provider.id}')" class="text-red-600 hover:text-red-800">
+          <button onclick="deleteProvider('${
+            provider.id
+          }')" class="text-red-600 hover:text-red-800">
             🗑️
           </button>
         </div>
       </div>
       
-      ${provider.address ? `
+      ${
+        provider.address
+          ? `
         <div class="mb-3">
           <p class="text-sm text-gray-600">📍 ${provider.address}</p>
         </div>
-      ` : ''}
+      `
+          : ""
+      }
       
-      ${provider.notes ? `
+      ${
+        provider.notes
+          ? `
         <div class="mb-3">
           <p class="text-sm text-gray-500">${provider.notes}</p>
         </div>
-      ` : ''}
+      `
+          : ""
+      }
       
       <div class="text-xs text-gray-400">
         Agregado: ${formatDate(provider.createdAt)}
@@ -195,54 +219,52 @@ function createProviderCard(provider) {
  */
 function setupProveedoresEvents() {
   // Botón agregar proveedor
-  const btnAgregar = document.getElementById('btn-agregar-proveedor');
+  const btnAgregar = document.getElementById("btn-agregar-proveedor");
   if (btnAgregar) {
-    btnAgregar.addEventListener('click', () => openProviderModal());
+    btnAgregar.addEventListener("click", () => openProviderModal());
   }
 
   // Modal events
-  const cancelBtn = document.getElementById('cancel-provider');
-  const saveBtn = document.getElementById('save-provider');
-  
+  const cancelBtn = document.getElementById("cancel-provider");
+  const saveBtn = document.getElementById("save-provider");
+
   if (cancelBtn) {
-    cancelBtn.addEventListener('click', closeProviderModal);
+    cancelBtn.addEventListener("click", closeProviderModal);
   }
-  
+
   if (saveBtn) {
-    saveBtn.addEventListener('click', handleSaveProvider);
+    saveBtn.addEventListener("click", handleSaveProvider);
   }
 
   // Búsqueda
-  const searchInput = document.getElementById('search-providers');
+  const searchInput = document.getElementById("search-providers");
   if (searchInput) {
-    searchInput.addEventListener('input', debounce(handleProviderSearch, 300));
+    searchInput.addEventListener("input", debounce(handleProviderSearch, 300));
   }
 }
+
+import { db } from "../firebase.js";
+import { collection, getDocs } from "firebase/firestore";
 
 /**
  * Obtiene los proveedores
  */
 async function getProviders() {
   try {
-    const db = window.firebaseDB();
-    if (!db) {
-      console.warn('Firebase no disponible, usando datos de ejemplo');
-      return getExampleProviders();
-    }
-
-    const querySnapshot = await db.collection('providers').get();
+    const providersRef = collection(db, "providers");
+    const querySnapshot = await getDocs(providersRef);
     const providers = [];
-    
+
     querySnapshot.forEach((doc) => {
       providers.push({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       });
     });
-    
+
     return providers.length > 0 ? providers : getExampleProviders();
   } catch (error) {
-    console.error('❌ Error al obtener proveedores:', error);
+    console.error("❌ Error al obtener proveedores:", error);
     return getExampleProviders();
   }
 }
@@ -253,23 +275,23 @@ async function getProviders() {
 function getExampleProviders() {
   return [
     {
-      id: 'prov1',
-      name: 'Textiles del Norte',
-      email: 'ventas@textilesnorte.com',
-      phone: '+54 261 123-4567',
-      address: 'Av. San Martín 1234, Mendoza',
-      notes: 'Proveedor principal de telas',
-      createdAt: new Date().toISOString()
+      id: "prov1",
+      name: "Textiles del Norte",
+      email: "ventas@textilesnorte.com",
+      phone: "+54 261 123-4567",
+      address: "Av. San Martín 1234, Mendoza",
+      notes: "Proveedor principal de telas",
+      createdAt: new Date().toISOString(),
     },
     {
-      id: 'prov2',
-      name: 'Confecciones Rosario',
-      email: 'info@confeccionesrosario.com',
-      phone: '+54 341 987-6543',
-      address: 'Córdoba 567, Rosario',
-      notes: 'Especialistas en ropa infantil',
-      createdAt: new Date().toISOString()
-    }
+      id: "prov2",
+      name: "Confecciones Rosario",
+      email: "info@confeccionesrosario.com",
+      phone: "+54 341 987-6543",
+      address: "Córdoba 567, Rosario",
+      notes: "Especialistas en ropa infantil",
+      createdAt: new Date().toISOString(),
+    },
   ];
 }
 
@@ -277,30 +299,30 @@ function getExampleProviders() {
  * Abre el modal de proveedor
  */
 function openProviderModal(provider = null) {
-  const modal = document.getElementById('provider-modal');
-  const title = document.getElementById('provider-modal-title');
-  
-  title.textContent = provider ? 'Editar Proveedor' : 'Agregar Proveedor';
-  
+  const modal = document.getElementById("provider-modal");
+  const title = document.getElementById("provider-modal-title");
+
+  title.textContent = provider ? "Editar Proveedor" : "Agregar Proveedor";
+
   if (provider) {
-    document.getElementById('provider-name').value = provider.name || '';
-    document.getElementById('provider-email').value = provider.email || '';
-    document.getElementById('provider-phone').value = provider.phone || '';
-    document.getElementById('provider-address').value = provider.address || '';
-    document.getElementById('provider-notes').value = provider.notes || '';
+    document.getElementById("provider-name").value = provider.name || "";
+    document.getElementById("provider-email").value = provider.email || "";
+    document.getElementById("provider-phone").value = provider.phone || "";
+    document.getElementById("provider-address").value = provider.address || "";
+    document.getElementById("provider-notes").value = provider.notes || "";
   } else {
-    document.getElementById('provider-form').reset();
+    document.getElementById("provider-form").reset();
   }
-  
-  modal.classList.remove('hidden');
+
+  modal.classList.remove("hidden");
 }
 
 /**
  * Cierra el modal de proveedor
  */
 function closeProviderModal() {
-  const modal = document.getElementById('provider-modal');
-  modal.classList.add('hidden');
+  const modal = document.getElementById("provider-modal");
+  modal.classList.add("hidden");
 }
 
 /**
@@ -308,36 +330,35 @@ function closeProviderModal() {
  */
 async function handleSaveProvider() {
   try {
-    const name = document.getElementById('provider-name').value.trim();
-    
+    const name = document.getElementById("provider-name").value.trim();
+
     if (!name) {
-      showNotification('El nombre es requerido', 'error');
+      showNotification("El nombre es requerido", "error");
       return;
     }
 
     const providerData = {
       name,
-      email: document.getElementById('provider-email').value.trim(),
-      phone: document.getElementById('provider-phone').value.trim(),
-      address: document.getElementById('provider-address').value.trim(),
-      notes: document.getElementById('provider-notes').value.trim(),
-      createdAt: new Date().toISOString()
+      email: document.getElementById("provider-email").value.trim(),
+      phone: document.getElementById("provider-phone").value.trim(),
+      address: document.getElementById("provider-address").value.trim(),
+      notes: document.getElementById("provider-notes").value.trim(),
+      createdAt: new Date().toISOString(),
     };
 
     // Simular guardado (en una implementación real, guardaría en Firebase)
-    showNotification('Proveedor guardado exitosamente', 'success');
+    showNotification("Proveedor guardado exitosamente", "success");
     closeProviderModal();
-    
+
     // Recargar la página para mostrar cambios
     setTimeout(() => {
       if (window.POS && window.POS.loadPage) {
-        window.POS.loadPage('proveedores');
+        window.POS.loadPage("proveedores");
       }
     }, 1000);
-
   } catch (error) {
-    console.error('❌ Error al guardar proveedor:', error);
-    showNotification('Error al guardar proveedor', 'error');
+    console.error("❌ Error al guardar proveedor:", error);
+    showNotification("Error al guardar proveedor", "error");
   }
 }
 
@@ -347,20 +368,20 @@ async function handleSaveProvider() {
 function handleProviderSearch(e) {
   const searchTerm = e.target.value.toLowerCase().trim();
   // Implementar filtrado de proveedores
-  showNotification('Funcionalidad de búsqueda en desarrollo', 'info');
+  showNotification("Funcionalidad de búsqueda en desarrollo", "info");
 }
 
 // Funciones globales
 window.editProvider = (providerId) => {
-  const provider = currentProviders.find(p => p.id === providerId);
+  const provider = currentProviders.find((p) => p.id === providerId);
   if (provider) {
     openProviderModal(provider);
   }
 };
 
 window.deleteProvider = (providerId) => {
-  if (confirm('¿Estás seguro de que quieres eliminar este proveedor?')) {
-    showNotification('Proveedor eliminado', 'success');
+  if (confirm("¿Estás seguro de que quieres eliminar este proveedor?")) {
+    showNotification("Proveedor eliminado", "success");
     // En una implementación real, eliminaría de Firebase
   }
 };

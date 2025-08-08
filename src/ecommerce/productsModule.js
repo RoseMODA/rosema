@@ -4,7 +4,7 @@
  * Usa Firestore como fuente única de datos
  */
 
-import { db } from "./firebase.js";
+import { db } from "../firebase.js";
 import { collection, getDocs } from "firebase/firestore";
 
 // Variable global para almacenar los productos

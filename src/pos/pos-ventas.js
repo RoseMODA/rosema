@@ -9,51 +9,8 @@ let currentCustomer = null;
 let currentDiscount = 0;
 
 import { getProducts } from "./firebase-products.js";
-import { db } from "./firebase.js";
+import { db } from "../firebase.js";
 import { collection, getDocs, orderBy, query, limit } from "firebase/firestore";
-
-/**
- * Inicializa la página de ventas
- */
-async function initVentas(container) {
-  try {
-    // Mostrar loading
-    container.innerHTML = `
-      <div class="flex items-center justify-center py-12">
-        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-        <span class="ml-3 text-gray-600">Cargando sistema de ventas...</span>
-      </div>
-    `;
-
-    // Cargar productos
-    allProducts = await getProducts();
-
-    // Renderizar interfaz
-    container.innerHTML = createVentasHTML();
-
-    // Aplicar correcciones de ventas (botón producto rápido, variables, etc)
-    applyVentasFixes();
-
-    // Configurar event listeners
-    setupVentasEvents();
-
-    // Cargar ventas recientes
-    await loadRecentSales();
-  } catch (error) {
-    console.error("❌ Error al cargar ventas:", error);
-    showNotification("Error al cargar el sistema de ventas", "error");
-
-    container.innerHTML = `
-      <div class="text-center py-12">
-        <h3 class="text-xl font-semibold text-red-600 mb-2">Error al cargar ventas</h3>
-        <p class="text-gray-500 mb-4">No se pudo cargar el sistema de ventas</p>
-        <button onclick="location.reload()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
-          Reintentar
-        </button>
-      </div>
-    `;
-  }
-}
 
 /**
  * Carga las ventas recientes
@@ -76,6 +33,54 @@ async function loadRecentSales() {
   } catch (error) {
     console.error("❌ Error al cargar ventas:", error);
     showNotification("Error al cargar las ventas", "error");
+  }
+}
+
+/**
+ * Inicializa la página de ventas
+ */
+async function initVentas(container) {
+  try {
+    // Mostrar loading
+    container.innerHTML = `
+      <div class="flex items-center justify-center py-12">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+        <span class="ml-3 text-gray-600">Cargando sistema de ventas...</span>
+      </div>
+    `;
+
+    // Cargar productos
+    allProducts = await getProducts();
+
+    // Renderizar interfaz
+    container.innerHTML = createVentasHTML();
+
+    // Configurar eventos de producto rápido
+    import("./pos-ventas-quick.js").then((module) => {
+      module.setupQuickProductEvents();
+    });
+
+    // Aplicar correcciones de ventas (botón producto rápido, variables, etc)
+    applyVentasFixes();
+
+    // Configurar event listeners
+    setupVentasEvents();
+
+    // Cargar ventas recientes
+    await loadRecentSales();
+  } catch (error) {
+    console.error("❌ Error al cargar ventas:", error);
+    showNotification("Error al cargar el sistema de ventas", "error");
+
+    container.innerHTML = `
+      <div class="text-center py-12">
+        <h3 class="text-xl font-semibold text-red-600 mb-2">Error al cargar ventas</h3>
+        <p class="text-gray-500 mb-4">No se pudo cargar el sistema de ventas</p>
+        <button onclick="location.reload()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+          Reintentar
+        </button>
+      </div>
+    `;
   }
 }
 
@@ -1113,38 +1118,6 @@ function printReceipt() {
     printWindow.print();
     printWindow.close();
   }, 250);
-}
-
-/**
- * Carga las ventas recientes
- */
-async function loadRecentSales() {
-  try {
-    const db = window.firebaseDB();
-    if (!db) {
-      console.warn("Firebase no disponible para cargar ventas");
-      return;
-    }
-
-    const salesSnapshot = await db
-      .collection("sales")
-      .orderBy("createdAt", "desc")
-      .limit(10)
-      .get();
-
-    const sales = [];
-    salesSnapshot.forEach((doc) => {
-      sales.push({
-        id: doc.id,
-        ...doc.data(),
-      });
-    });
-
-    renderSalesTable(sales);
-  } catch (error) {
-    console.error("❌ Error al cargar ventas:", error);
-    showNotification("Error al cargar las ventas", "error");
-  }
 }
 
 /**

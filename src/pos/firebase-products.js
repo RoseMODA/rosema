@@ -2,21 +2,21 @@
  * Firebase Products Functions - Funciones para manejar productos en Firebase
  */
 
-import { db } from "../firebase.js";
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  addDoc,
-  updateDoc,
-  deleteDoc,
+import { db } from '../firebase.js';
+import { 
+  collection, 
+  getDocs, 
+  query, 
+  where, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
   doc,
   orderBy,
-  limit,
-} from "firebase/firestore";
+  limit
+} from 'firebase/firestore';
 
-const PRODUCTS_COLLECTION = "products";
+const PRODUCTS_COLLECTION = 'products';
 
 /**
  * Obtiene todos los productos de Firebase
@@ -25,20 +25,20 @@ const PRODUCTS_COLLECTION = "products";
 export async function getProducts() {
   try {
     const productsRef = collection(db, PRODUCTS_COLLECTION);
-    const q = query(productsRef, orderBy("name", "asc"));
+    const q = query(productsRef, orderBy('name', 'asc'));
     const querySnapshot = await getDocs(q);
-
+    
     const products = [];
     querySnapshot.forEach((doc) => {
       products.push({
         id: doc.id,
-        ...doc.data(),
+        ...doc.data()
       });
     });
-
+    
     return products;
   } catch (error) {
-    console.error("Error al obtener productos:", error);
+    console.error('Error al obtener productos:', error);
     throw error;
   }
 }
@@ -50,24 +50,20 @@ export async function getProducts() {
 export async function getLowStockProducts() {
   try {
     const productsRef = collection(db, PRODUCTS_COLLECTION);
-    const q = query(
-      productsRef,
-      where("stock", "<", 2),
-      orderBy("stock", "asc")
-    );
+    const q = query(productsRef, where('stock', '<', 2), orderBy('stock', 'asc'));
     const querySnapshot = await getDocs(q);
-
+    
     const lowStockProducts = [];
     querySnapshot.forEach((doc) => {
       lowStockProducts.push({
         id: doc.id,
-        ...doc.data(),
+        ...doc.data()
       });
     });
-
+    
     return lowStockProducts;
   } catch (error) {
-    console.error("Error al obtener productos con stock bajo:", error);
+    console.error('Error al obtener productos con stock bajo:', error);
     throw error;
   }
 }
@@ -81,17 +77,17 @@ export async function getProductById(productId) {
   try {
     const productRef = doc(db, PRODUCTS_COLLECTION, productId);
     const productSnap = await getDoc(productRef);
-
+    
     if (productSnap.exists()) {
       return {
         id: productSnap.id,
-        ...productSnap.data(),
+        ...productSnap.data()
       };
     }
-
+    
     return null;
   } catch (error) {
-    console.error("Error al obtener producto:", error);
+    console.error('Error al obtener producto:', error);
     throw error;
   }
 }
@@ -106,15 +102,15 @@ export async function addProduct(productData) {
     const docRef = await addDoc(collection(db, PRODUCTS_COLLECTION), {
       ...productData,
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     });
-
+    
     return {
       id: docRef.id,
-      ...productData,
+      ...productData
     };
   } catch (error) {
-    console.error("Error al agregar producto:", error);
+    console.error('Error al agregar producto:', error);
     throw error;
   }
 }
@@ -130,10 +126,10 @@ export async function updateProduct(productId, updateData) {
     const productRef = doc(db, PRODUCTS_COLLECTION, productId);
     await updateDoc(productRef, {
       ...updateData,
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     });
   } catch (error) {
-    console.error("Error al actualizar producto:", error);
+    console.error('Error al actualizar producto:', error);
     throw error;
   }
 }
@@ -148,7 +144,7 @@ export async function deleteProduct(productId) {
     const productRef = doc(db, PRODUCTS_COLLECTION, productId);
     await deleteDoc(productRef);
   } catch (error) {
-    console.error("Error al eliminar producto:", error);
+    console.error('Error al eliminar producto:', error);
     throw error;
   }
 }
@@ -161,17 +157,16 @@ export async function deleteProduct(productId) {
 export async function searchProducts(searchTerm) {
   try {
     const products = await getProducts();
-
-    return products.filter(
-      (product) =>
-        product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.sku?.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    return products.filter(product => 
+      product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.sku?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   } catch (error) {
-    console.error("Error al buscar productos:", error);
+    console.error('Error al buscar productos:', error);
     throw error;
   }
 }
 
 // Importar getDoc si no está importado
-import { getDoc } from "firebase/firestore";
+import { getDoc } from 'firebase/firestore';
