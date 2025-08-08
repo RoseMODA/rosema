@@ -4,9 +4,9 @@
   "description": "",
   "main": "firebase.js",
   "type": "module",
-  "scripts": {
+"scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview"
   },
