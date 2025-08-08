@@ -4,8 +4,8 @@
  */
 
 // Estado global del POS
-let currentPage = 'inicio';
-let currentUser = 'Administrador';
+let currentPage = "inicio";
+let currentUser = "Administrador";
 
 // Referencias DOM
 let mainContent, pageTitle, pageDate, navItems;
@@ -15,27 +15,27 @@ let mainContent, pageTitle, pageDate, navItems;
  */
 async function initPOS() {
   try {
-    console.log('🚀 Iniciando sistema POS Rosema...');
-    
+    console.log("🚀 Iniciando sistema POS Rosema...");
+
     // Obtener referencias DOM
-    mainContent = document.getElementById('main-content');
-    pageTitle = document.getElementById('page-title');
-    pageDate = document.getElementById('page-date');
-    navItems = document.querySelectorAll('.nav-item');
-    
+    mainContent = document.getElementById("main-content");
+    pageTitle = document.getElementById("page-title");
+    pageDate = document.getElementById("page-date");
+    navItems = document.querySelectorAll(".nav-item");
+
     // Actualizar fecha
     updatePageDate();
-    
+
     // Configurar navegación
     setupNavigation();
-    
+
     // Cargar página inicial
-    await loadPage('inicio');
-    
-    console.log('✅ Sistema POS iniciado correctamente');
+    await loadPage("inicio");
+
+    console.log("✅ Sistema POS iniciado correctamente");
   } catch (error) {
-    console.error('❌ Error al inicializar POS:', error);
-    showNotification('Error al inicializar el sistema POS', 'error');
+    console.error("❌ Error al inicializar POS:", error);
+    showNotification("Error al inicializar el sistema POS", "error");
   }
 }
 
@@ -43,16 +43,16 @@ async function initPOS() {
  * Configura la navegación del sidebar
  */
 function setupNavigation() {
-  navItems.forEach(item => {
-    item.addEventListener('click', async (e) => {
+  navItems.forEach((item) => {
+    item.addEventListener("click", async (e) => {
       e.preventDefault();
-      
-      const pageId = item.id.replace('nav-', '');
-      
+
+      const pageId = item.id.replace("nav-", "");
+
       // Actualizar estado visual
-      navItems.forEach(nav => nav.classList.remove('sidebar-active'));
-      item.classList.add('sidebar-active');
-      
+      navItems.forEach((nav) => nav.classList.remove("sidebar-active"));
+      item.classList.add("sidebar-active");
+
       // Cargar página
       await loadPage(pageId);
     });
@@ -66,37 +66,37 @@ async function loadPage(pageId) {
   try {
     showLoading(true);
     currentPage = pageId;
-    
+
     // Actualizar título
     const titles = {
-      'inicio': 'INICIO',
-      'estadisticas': 'ESTADÍSTICAS', 
-      'ventas': 'VENTAS',
-      'productos': 'PRODUCTOS',
-      'proveedores': 'PROVEEDORES',
-      'facturas': 'FACTURAS ARCA'
+      inicio: "INICIO",
+      estadisticas: "ESTADÍSTICAS",
+      ventas: "VENTAS",
+      productos: "PRODUCTOS",
+      proveedores: "PROVEEDORES",
+      facturas: "FACTURAS ARCA",
     };
-    
+
     pageTitle.textContent = titles[pageId] || pageId.toUpperCase();
-    
+
     // Cargar contenido según la página
-    switch(pageId) {
-      case 'inicio':
+    switch (pageId) {
+      case "inicio":
         await loadDashboard();
         break;
-      case 'estadisticas':
+      case "estadisticas":
         await loadEstadisticas();
         break;
-      case 'ventas':
+      case "ventas":
         await loadVentas();
         break;
-      case 'productos':
+      case "productos":
         await loadProductos();
         break;
-      case 'proveedores':
+      case "proveedores":
         await loadProveedores();
         break;
-      case 'facturas':
+      case "facturas":
         await loadFacturas();
         break;
       default:
@@ -107,11 +107,10 @@ async function loadPage(pageId) {
           </div>
         `;
     }
-    
   } catch (error) {
     console.error(`❌ Error al cargar página ${pageId}:`, error);
-    showNotification(`Error al cargar ${pageId}`, 'error');
-    
+    showNotification(`Error al cargar ${pageId}`, "error");
+
     mainContent.innerHTML = `
       <div class="text-center py-12">
         <h3 class="text-xl font-semibold text-red-600 mb-2">Error al cargar la página</h3>
@@ -130,7 +129,7 @@ async function loadPage(pageId) {
  * Carga el dashboard principal (basado en la maqueta)
  */
 async function loadDashboard() {
-  if (typeof initDashboard === 'function') {
+  if (typeof initDashboard === "function") {
     await initDashboard(mainContent);
   } else {
     mainContent.innerHTML = `
@@ -146,7 +145,7 @@ async function loadDashboard() {
  * Carga la página de estadísticas
  */
 async function loadEstadisticas() {
-  if (typeof initEstadisticas === 'function') {
+  if (typeof initEstadisticas === "function") {
     await initEstadisticas(mainContent);
   } else {
     mainContent.innerHTML = `
@@ -162,7 +161,7 @@ async function loadEstadisticas() {
  * Carga la página de ventas
  */
 async function loadVentas() {
-  if (typeof initVentas === 'function') {
+  if (typeof initVentas === "function") {
     await initVentas(mainContent);
   } else {
     mainContent.innerHTML = `
@@ -178,8 +177,8 @@ async function loadVentas() {
  * Carga la página de productos
  */
 async function loadProductos() {
-  if (typeof initProductos === 'function') {
-    await initProductos(mainContent);
+  if (typeof window.initProductos === "function") {
+    await window.initProductos(mainContent);
   } else {
     mainContent.innerHTML = `
       <div class="text-center py-12">
@@ -194,7 +193,7 @@ async function loadProductos() {
  * Carga la página de proveedores
  */
 async function loadProveedores() {
-  if (typeof initProveedores === 'function') {
+  if (typeof initProveedores === "function") {
     await initProveedores(mainContent);
   } else {
     mainContent.innerHTML = `
@@ -210,7 +209,7 @@ async function loadProveedores() {
  * Carga la página de facturas ARCA
  */
 async function loadFacturas() {
-  if (typeof initFacturas === 'function') {
+  if (typeof initFacturas === "function") {
     await initFacturas(mainContent);
   } else {
     mainContent.innerHTML = `
@@ -226,11 +225,11 @@ async function loadFacturas() {
  * Muestra/oculta el overlay de carga
  */
 function showLoading(show) {
-  const overlay = document.getElementById('loading-overlay');
+  const overlay = document.getElementById("loading-overlay");
   if (show) {
-    overlay.classList.remove('hidden');
+    overlay.classList.remove("hidden");
   } else {
-    overlay.classList.add('hidden');
+    overlay.classList.add("hidden");
   }
 }
 
@@ -241,24 +240,24 @@ function updatePageDate() {
   if (!pageDate) return;
 
   const now = new Date();
-  const options = { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+  const options = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   };
-  
-  const dateString = now.toLocaleDateString('es-ES', options);
+
+  const dateString = now.toLocaleDateString("es-ES", options);
   pageDate.textContent = `Hoy ${dateString}`;
 }
 
 // Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', initPOS);
+document.addEventListener("DOMContentLoaded", initPOS);
 
 // Exportar funciones para uso global
 window.POS = {
   loadPage,
   showLoading,
   currentPage: () => currentPage,
-  currentUser: () => currentUser
+  currentUser: () => currentUser,
 };
