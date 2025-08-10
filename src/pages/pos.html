@@ -31,7 +31,8 @@
     <div class="p-6 border-b border-red-500">
       <div class="flex items-center space-x-3">
         <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-          <img src="/img/rosemalog.svg" alt="Rosema" class="w-8 h-8" onerror="this.style.display='none'" />
+          <img src="/public/assets/img/rosemalog.svg" alt="Rosema" class="w-8 h-8"
+            onerror="this.style.display='none'" />
           <span class="text-red-600 font-bold text-lg" style="display: none;">R</span>
         </div>
         <div>
@@ -166,7 +167,7 @@
   </div>
 
   <!-- Cargar Firebase config primero -->
-  <script type="module" src="/src/firebase.js" defer></script>
+  <script type="module" src="/src/services/firebase.js" defer></script>
 
   <!-- Cargar módulos del POS en orden correcto -->
   <script type="module" src="/src/pos/pos-utils.js" defer></script>
