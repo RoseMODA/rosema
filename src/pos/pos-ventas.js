@@ -40,7 +40,7 @@ async function loadRecentSales() {
  */
 async function initVentas(container) {
   try {
-    // Mostrar loading
+    // 1. Mostrar loading
     container.innerHTML = `
       <div class="flex items-center justify-center py-12">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
@@ -48,29 +48,31 @@ async function initVentas(container) {
       </div>
     `;
 
-    // Cargar productos
-    allProducts = await getProducts();
+    // 2. Cargar productos
+    window.allProducts = allProducts = await getProducts();
 
-    // Renderizar interfaz
+    // 3. Renderizar interfaz principal
     container.innerHTML = createVentasHTML();
 
-    // Configurar eventos de producto rápido
-    import("./pos-ventas-quick.js").then((module) => {
-      module.setupQuickProductEvents();
-    });
-
-    // Aplicar correcciones de ventas (botón producto rápido, variables, etc)
-    applyVentasFixes();
-
-    // Configurar event listeners
+    // 4. Configurar eventos y lógica después de renderizar el HTML
     setupVentasEvents();
+    renderSaleCart();
 
-    // Cargar ventas recientes
+    // 5. Exponer funciones globales necesarias
+    window.addProductToSale = addProductToSale;
+    window.setupQuickProductEvents = setupQuickProductEvents;
+    window.renderSaleCart = renderSaleCart;
+    window.currentSaleCart = window.currentSaleCart || [];
+    window.currentDiscount = window.currentDiscount || 0;
+
+    // 6. Cargar ventas recientes (opcional, si es necesario mostrar historial)
     await loadRecentSales();
+
+    // 7. Mensaje de éxito
+    console.log("✅ Ventas inicializadas correctamente");
   } catch (error) {
     console.error("❌ Error al cargar ventas:", error);
     showNotification("Error al cargar el sistema de ventas", "error");
-
     container.innerHTML = `
       <div class="text-center py-12">
         <h3 class="text-xl font-semibold text-red-600 mb-2">Error al cargar ventas</h3>
@@ -1210,16 +1212,7 @@ function renderSalesTable(sales) {
 window.addProductToSale = addProductToSale;
 window.updateSaleItemQuantity = updateSaleItemQuantity;
 window.removeSaleItem = removeSaleItem;
-window.handleApplyDiscount = handleApplyDiscount;
-window.handleFinishSale = handleFinishSale;
-window.handleClearSale = handleClearSale;
-window.handleExportSales = handleExportSales;
-window.renderSaleCart = renderSaleCart;
-window.updateSaleTotals = updateSaleTotals;
-window.viewSaleDetails = window.viewSaleDetails || (async () => {});
-window.printSaleReceipt = window.printSaleReceipt || (async () => {});
-window.deleteSaleConfirm = window.deleteSaleConfirm || (async () => {});
-window.showSaleDetailsModal = window.showSaleDetailsModal || (() => {});
+
 /**
  * Muestra los detalles de una venta
  */
@@ -1443,7 +1436,7 @@ function showSaleDetailsModal(saleData) {
               `
                   : ""
               }
-              <div class="flex justify-between text-lg font-semibold border-t pt-2">
+              <div class="flex justify-between text-lg font-semibold border-t mt-2 pt-2">
                 <span>Total:</span>
                 <span>${formatCurrency(saleData.total)}</span>
               </div>
@@ -1481,17 +1474,31 @@ function closeSaleDetailsModal() {
   }
 }
 
-window.closeSaleDetailsModal = window.closeSaleDetailsModal || (() => {});
-window.printSaleReceiptWindow = window.printSaleReceiptWindow || (() => {});
-// Solo llamar a applyVentasFixes si está definida
-if (typeof applyVentasFixes === "function") applyVentasFixes();
-if (typeof setupVentasEvents === "function") setupVentasEvents();
-if (typeof renderSaleCart === "function") renderSaleCart();
-
 /**
  * Imprime el recibo de una venta en una nueva ventana
+// Funciones globales para los botones de la tabla
+if (typeof window !== "undefined") {
+  window.initVentas = initVentas;
+  window.addProductToSale = addProductToSale;
+  window.updateSaleItemQuantity = updateSaleItemQuantity;
+  window.removeSaleItem = removeSaleItem;
+  window.handleApplyDiscount = handleApplyDiscount;
+  window.handleFinishSale = handleFinishSale;
+  window.handleClearSale = handleClearSale;
+  window.handleExportSales = typeof handleExportSales !== 'undefined' ? handleExportSales : () => {};
+  window.renderSaleCart = renderSaleCart;
+  window.updateSaleTotals = updateSaleTotals;
+  window.viewSaleDetails = typeof viewSaleDetails !== 'undefined' ? viewSaleDetails : async () => {};
+  window.printSaleReceipt = typeof printSaleReceipt !== 'undefined' ? printSaleReceipt : async () => {};
+  window.deleteSaleConfirm = typeof deleteSaleConfirm !== 'undefined' ? deleteSaleConfirm : async () => {};
+  window.showSaleDetailsModal = typeof showSaleDetailsModal !== 'undefined' ? showSaleDetailsModal : () => {};
+  window.closeSaleDetailsModal = typeof closeSaleDetailsModal !== 'undefined' ? closeSaleDetailsModal : () => {};
+  window.printSaleReceiptWindow = typeof printSaleReceiptWindow !== 'undefined' ? printSaleReceiptWindow : () => {};
+}
+// Inicialización de eventos y fixes
+if (typeof setupVentasEvents === 'function') setupVentasEvents();
+if (typeof applyVentasFixes === 'function') applyVentasFixes();
  */
-
 function printSaleReceiptWindow(saleData) {
   const receiptContent = createReceiptHTML(saleData);
 
