@@ -11,7 +11,7 @@
   <!-- Font Awesome 6 CDN (gratis) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-  <link rel="stylesheet" href="../../../styles/style.css">
+  <link rel="stylesheet" href="/src/styles/style.css">
 </head>
 
 <body>
@@ -29,7 +29,7 @@
 
         <!-- Links visibles desde sm -->
         <div class="hidden sm:flex items-center space-x-2">
-          <a href="/index.html" class="hover:text-[#fcdede]" tabindex="0">Inicio</a>
+          <a href="/src/pages/index.html" class="hover:text-[#fcdede]" tabindex="0">Inicio</a>
           <span>|</span>
           <a href="#" class="hover:text-[#fcdede]" tabindex="0">Nosotros</a>
           <span>|</span>
@@ -39,8 +39,8 @@
 
       <!-- Logo centrado absoluto -->
       <div class="flex justify-center absolute top-1 left-1/2 -translate-x-1/2 z-10">
-        <a href="/index.html" id="home-logo-link" class="cursor-pointer">
-          <img src="/img/rosemalogysubwhite.png" alt="Logo Rosema moda familiar"
+        <a href="/src/pages/index.html" id="home-logo-link" class="cursor-pointer">
+          <img src="/public/assets/img/rosemalogysubwhite.png" alt="Logo Rosema moda familiar"
             class="h-32 w-auto select-none hover:opacity-90 transition-opacity" />
         </a>
       </div>
@@ -80,23 +80,25 @@
 
   <!-- Menú colapsable en móviles -->
   <div id="mobile-menu" class="sm:hidden hidden flex-col bg-[#d6342b] text-white px-4 py-2 space-y-2">
-    <a href="/index.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Inicio</a>
+    <a href="/src/pages/index.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Inicio</a>
     <a href="#" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Nosotros</a>
-    <a href="/categories/mujer.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Mujer</a>
-    <a href="/categories/hombre.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Hombre</a>
-    <a href="/categories/ninos.html"
+    <a href="/src/pages/categories/mujer.html"
+      class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Mujer</a>
+    <a href="/src/pages/categories/hombre.html"
+      class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Hombre</a>
+    <a href="/src/pages/categories/ninos.html"
       class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Niños/Bebés</a>
-    <a href="/categories/otros.html"
+    <a href="/src/pages/categories/otros.html"
       class="block hover:text-[#fcdede] transition-colors duration-300 py-2 font-bold">Otros</a>
   </div>
 
   <!-- Secondary navigation categories -->
   <nav aria-label="Categorías de productos"
     class="category-nav hidden sm:flex justify-center space-x-10 mt-5 mb-2 select-none font-semibold font-mono max-w-5xl mx-auto px-4">
-    <a href="/categories/mujer.html" tabindex="0">Mujer</a>
-    <a href="/categories/hombre.html" tabindex="0">Hombre</a>
-    <a href="/categories/ninos.html" tabindex="0">Niños/Bebes</a>
-    <a href="/categories/otros.html" tabindex="0" class="text-[#d23b35] font-bold">Otros</a>
+    <a href="/src/pages/categories/mujer.html" tabindex="0">Mujer</a>
+    <a href="/src/pages/categories/hombre.html" tabindex="0">Hombre</a>
+    <a href="/src/pages/categories/ninos.html" tabindex="0">Niños/Bebes</a>
+    <a href="/src/pages/categories/otros.html" tabindex="0" class="text-[#d23b35] font-bold">Otros</a>
 
 
   </nav>
@@ -226,7 +228,7 @@
       <div>
         <h3 class="uppercase font-semibold mb-5 tracking-wide text-gray-400">Medios de pago</h3>
         <div class="flex items-center space-x-4 mb-6">
-          <img src="/icons/mercado-pago-logo.svg" class="h-10 w-auto object-contain" />
+          <img src="/public/assets/icons/mercado-pago-logo.svg" class="h-10 w-auto object-contain" />
           <button
             class="border border-white py-1 px-4 text-white text-xs uppercase tracking-wider hover:bg-white hover:text-gray-900 transition rounded">Efectivo</button>
         </div>
@@ -295,7 +297,7 @@
     </svg>
   </a>
 
-  <script type="module" src="../../../ecommerce/main.js"></script>
+  <script type="module" src="/src/ecommerce/main.js"></script>
   <script>
     // Set category for this page
     window.currentPageCategory = 'otros';
