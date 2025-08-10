@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import { resolve } from "path";
 
 export default defineConfig({
   root: ".",
@@ -7,13 +8,16 @@ export default defineConfig({
     assetsDir: "assets",
     rollupOptions: {
       input: {
-        main: "index.html",
-        pos: "public/pos/pos.html",
-        mujer: "public/categories/mujer.html",
-        hombre: "public/categories/hombre.html",
-        ninos: "public/categories/ninos.html",
-        otros: "public/categories/otros.html",
-        product: "product.html",
+        // Páginas principales
+        main: resolve(__dirname, "src/pages/index.html"),
+        product: resolve(__dirname, "src/pages/product.html"),
+        pos: resolve(__dirname, "src/pages/pos.html"),
+
+        // Categorías
+        mujer: resolve(__dirname, "src/pages/categories/mujer.html"),
+        hombre: resolve(__dirname, "src/pages/categories/hombre.html"),
+        ninos: resolve(__dirname, "src/pages/categories/ninos.html"),
+        otros: resolve(__dirname, "src/pages/categories/otros.html"),
       },
     },
   },
