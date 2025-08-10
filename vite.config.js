@@ -7,8 +7,13 @@ export default defineConfig({
     assetsDir: "assets",
     rollupOptions: {
       input: {
-        main: "public/index.html",
-        pos: "public/pos.html",
+        main: "index.html",
+        pos: "public/pos/pos.html",
+        mujer: "public/categories/mujer.html",
+        hombre: "public/categories/hombre.html",
+        ninos: "public/categories/ninos.html",
+        otros: "public/categories/otros.html",
+        product: "product.html",
       },
     },
   },

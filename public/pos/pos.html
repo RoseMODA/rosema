@@ -7,6 +7,12 @@
   <title>POS - Rosema Moda Familiar</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Firebase CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
+
   <style>
     body {
       font-family: 'Inter', sans-serif;
@@ -160,21 +166,21 @@
   </div>
 
   <!-- Cargar Firebase config primero -->
-  <script type="module" src="/src/firebase.js"></script>
+  <script type="module" src="/src/firebase.js" defer></script>
 
   <!-- Cargar módulos del POS en orden correcto -->
-  <script type="module" src="/src/pos/pos-utils.js"></script>
-  <script type="module" src="/src/pos/firebase-products.js"></script>
-  <script type="module" src="/src/pos/pos-dashboard.js"></script>
-  <script type="module" src="/src/pos/pos-productos-fixed.js"></script>
+  <script type="module" src="/src/pos/pos-utils.js" defer></script>
+  <script type="module" src="/src/pos/firebase-products.js" defer></script>
+  <script type="module" src="/src/pos/pos-dashboard.js" defer></script>
+  <script type="module" src="/src/pos/pos-productos-fixed.js" defer></script>
 
-  <script type="module" src="/src/pos/pos-ventas.js"></script>
-  <script type="module" src="/src/pos/pos-ventas-quick.js"></script>
-  <script type="module" src="/src/pos/pos-estadisticas.js"></script>
-  <script type="module" src="/src/pos/pos-proveedores.js"></script>
-  <script type="module" src="/src/pos/pos-facturas.js"></script>
-  <script type="module" src="/src/pos/pos-ventas-fix.js"></script>
-  <script type="module" src="/src/pos/pos-main.js"></script>
+  <script type="module" src="/src/pos/pos-ventas.js" defer></script>
+  <script type="module" src="/src/pos/pos-ventas-quick.js" defer></script>
+  <script type="module" src="/src/pos/pos-estadisticas.js" defer></script>
+  <script type="module" src="/src/pos/pos-proveedores.js" defer></script>
+  <script type="module" src="/src/pos/pos-facturas.js" defer></script>
+  <script type="module" src="/src/pos/pos-ventas-fix.js" defer></script>
+  <script type="module" src="/src/pos/pos-main.js" defer></script>
 
 </body>
 

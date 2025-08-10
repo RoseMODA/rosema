@@ -519,3 +519,8 @@ window.sendToArca = (invoiceId) => {
     showNotification("Factura enviada a ARCA exitosamente", "success");
   }, 1500);
 };
+
+// Exportar función principal globalmente
+if (typeof window !== "undefined") {
+  window.initFacturas = initFacturas;
+}

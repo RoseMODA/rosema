@@ -161,8 +161,8 @@ async function loadEstadisticas() {
  * Carga la página de ventas
  */
 async function loadVentas() {
-  if (typeof initVentas === "function") {
-    await initVentas(mainContent);
+  if (typeof window.initVentas === "function") {
+    await window.initVentas(mainContent);
   } else {
     mainContent.innerHTML = `
       <div class="text-center py-12">

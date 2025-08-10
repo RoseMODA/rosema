@@ -78,8 +78,11 @@ async function createProduct(productData, imageFiles) {
 }
 
 // Exportar initProductos y createProduct globalmente para que pos-main.js los pueda usar
-window.initProductos = initProductos;
-window.createProduct = createProduct;
+if (typeof window !== "undefined") {
+  window.initProductos = initProductos;
+  window.createProduct = createProduct;
+  // Puedes exponer más funciones si necesitas acceso global
+}
 
 /**
  * Crea el HTML de la página de productos

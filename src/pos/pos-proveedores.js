@@ -385,3 +385,8 @@ window.deleteProvider = (providerId) => {
     // En una implementación real, eliminaría de Firebase
   }
 };
+
+// Exportar función principal globalmente
+if (typeof window !== "undefined") {
+  window.initProveedores = initProveedores;
+}

@@ -35,7 +35,6 @@ async function loadRecentSales() {
     showNotification("Error al cargar las ventas", "error");
   }
 }
-
 /**
  * Inicializa la página de ventas
  */
@@ -1211,7 +1210,16 @@ function renderSalesTable(sales) {
 window.addProductToSale = addProductToSale;
 window.updateSaleItemQuantity = updateSaleItemQuantity;
 window.removeSaleItem = removeSaleItem;
-
+window.handleApplyDiscount = handleApplyDiscount;
+window.handleFinishSale = handleFinishSale;
+window.handleClearSale = handleClearSale;
+window.handleExportSales = handleExportSales;
+window.renderSaleCart = renderSaleCart;
+window.updateSaleTotals = updateSaleTotals;
+window.viewSaleDetails = window.viewSaleDetails || (async () => {});
+window.printSaleReceipt = window.printSaleReceipt || (async () => {});
+window.deleteSaleConfirm = window.deleteSaleConfirm || (async () => {});
+window.showSaleDetailsModal = window.showSaleDetailsModal || (() => {});
 /**
  * Muestra los detalles de una venta
  */
@@ -1473,9 +1481,17 @@ function closeSaleDetailsModal() {
   }
 }
 
+window.closeSaleDetailsModal = window.closeSaleDetailsModal || (() => {});
+window.printSaleReceiptWindow = window.printSaleReceiptWindow || (() => {});
+// Solo llamar a applyVentasFixes si está definida
+if (typeof applyVentasFixes === "function") applyVentasFixes();
+if (typeof setupVentasEvents === "function") setupVentasEvents();
+if (typeof renderSaleCart === "function") renderSaleCart();
+
 /**
  * Imprime el recibo de una venta en una nueva ventana
  */
+
 function printSaleReceiptWindow(saleData) {
   const receiptContent = createReceiptHTML(saleData);
 
@@ -1543,9 +1559,73 @@ function printSaleReceiptWindow(saleData) {
   }, 250);
 }
 
-// Hacer funciones disponibles globalmente
-window.closeSaleDetailsModal = closeSaleDetailsModal;
-window.printSaleReceiptWindow = printSaleReceiptWindow;
+// Exportar funciones y variables globalmente para acceso desde HTML y otros módulos
+window.initVentas = initVentas;
+window.addProductToSale = addProductToSale;
+window.updateSaleItemQuantity = updateSaleItemQuantity;
+window.removeSaleItem = removeSaleItem;
+window.handleApplyDiscount = handleApplyDiscount;
+window.handleFinishSale = handleFinishSale;
+window.handleClearSale = handleClearSale;
+window.handleExportSales = handleExportSales;
+window.renderSaleCart = renderSaleCart;
+window.updateSaleTotals = updateSaleTotals;
+window._ventasInitialized = true;
+setupVentasEvents();
+applyVentasFixes && applyVentasFixes();
+renderSaleCart();
+updateSaleTotals();
+
+observer.observe(mainContent, { childList: true, subtree: true });
+console.log("🖨️ Ventana de impresión abierta para venta:", saleData.saleNumber);
+// --- FIN NUEVO ---
+
+// Exportar funciones y variables globalmente para acceso desde HTML y otros módulos
+window.currentSaleCart = currentSaleCart;
+window.allProducts = allProducts;
+window.currentCustomer = currentCustomer;
+window.currentDiscount = currentDiscount;
+
+// Exportar funciones principales para acceso global y desde otros módulos
+window.initVentas = initVentas;
+window.addProductToSale = addProductToSale;
+window.updateSaleItemQuantity = updateSaleItemQuantity;
+window.removeSaleItem = removeSaleItem;
+window.handleApplyDiscount = handleApplyDiscount;
+window.handleFinishSale = handleFinishSale;
+window.handleClearSale = handleClearSale;
+window.handleExportSales = handleExportSales;
+window.renderSaleCart = renderSaleCart;
+window.updateSaleTotals = updateSaleTotals;
+
+// --- NUEVO: Inicializar observer para ventas cuando el DOM esté listo ---
+if (typeof window !== "undefined") {
+  // Asegura que el observer solo se inicialice una vez
+  if (!window._ventasObserverInitialized) {
+    window._ventasObserverInitialized = true;
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", observeVentasDOM);
+    } else {
+      observeVentasDOM();
+    }
+  }
+}
+// --- FIN NUEVO ---
+
+// Inicializar eventos de ventas cuando el DOM esté listo
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", () => {
+    // No inicializar ventas aquí, solo asegurar funciones globales
+  });
+} else {
+  // No inicializar ventas aquí, solo asegurar funciones globales
+}
+
+// Exportar funciones y variables globalmente para acceso desde HTML y otros módulos
+window.currentSaleCart = currentSaleCart;
+window.allProducts = allProducts;
+window.currentCustomer = currentCustomer;
+window.currentDiscount = currentDiscount;
 
 /**
  * Maneja la exportación de ventas

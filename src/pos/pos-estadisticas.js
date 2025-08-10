@@ -441,3 +441,8 @@ function setupEstadisticasEvents() {
   // Por ahora no hay eventos específicos, pero se pueden agregar filtros de fecha, etc.
   console.log("📊 Estadísticas cargadas correctamente");
 }
+
+// Exportar función principal globalmente
+if (typeof window !== "undefined") {
+  window.initEstadisticas = initEstadisticas;
+}

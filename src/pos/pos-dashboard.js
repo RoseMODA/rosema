@@ -7,13 +7,13 @@ import { getProducts, getLowStockProducts } from "./firebase-products.js";
 
 // Funciones auxiliares para formateo
 function formatNumber(num) {
-  return new Intl.NumberFormat('es-ES').format(num || 0);
+  return new Intl.NumberFormat("es-ES").format(num || 0);
 }
 
 function formatCurrency(amount) {
-  return new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency: 'ARS'
+  return new Intl.NumberFormat("es-ES", {
+    style: "currency",
+    currency: "ARS",
   }).format(amount || 0);
 }
 
@@ -196,8 +196,10 @@ function createDashboardHTML(stats, lowStockProducts) {
             <span class="font-semibold">${stats.onSaleProducts}</span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-gray-600">Sin stock:</span>
-            <span class="font-semibold text-red-600">${stats.outOfStock}</span>
+    // Exportar función principal globalmente
+    if (typeof window !== "undefined") {
+      window.initDashboard = initDashboard;
+    }
           </div>
         </div>
       </div>
@@ -343,4 +345,8 @@ function setupDashboardEvents() {
       }
     });
   }
+}
+// Exportar función principal globalmente
+if (typeof window !== "undefined") {
+  window.initDashboard = initDashboard;
 }

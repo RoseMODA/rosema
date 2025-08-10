@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title id="product-title">Producto - Rosema Moda Familiar</title>
-  
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Font Awesome 6 CDN -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-  <link rel="stylesheet" href="/public/style.css">
+  <link rel="stylesheet" href="/style.css">
 </head>
 
 <body>
@@ -20,7 +21,7 @@
   <!-- Top Navbar -->
   <header class="bg-[#d63629] text-white px-4 py-4 min-h-[120px] relative overflow-visible">
     <div class="flex items-center justify-between">
-      
+
       <!-- Menú izquierdo -->
       <div class="flex items-center space-x-4">
         <!-- Botón menú visible solo en móvil -->
@@ -39,7 +40,8 @@
       <!-- Logo centrado absoluto -->
       <div class="flex justify-center absolute top-1 left-1/2 -translate-x-1/2 z-10">
         <a href="index.html" id="home-logo-link" class="cursor-pointer">
-          <img src="public/img/rosemalogysubwhite.png" alt="Logo Rosema moda familiar" class="h-32 w-auto select-none hover:opacity-90 transition-opacity" />
+          <img src="public/img/rosemalogysubwhite.png" alt="Logo Rosema moda familiar"
+            class="h-32 w-auto select-none hover:opacity-90 transition-opacity" />
         </a>
       </div>
 
@@ -81,15 +83,19 @@
     <a href="index.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Inicio</a>
     <a href="#" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Nosotros</a>
     <a href="#" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Pedidos</a>
-    <a href="public/categories/mujer.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Mujer</a>
-    <a href="public/categories/hombre.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Hombre</a>
-    <a href="public/categories/ninos.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Niños/Bebés</a>
-    <a href="public/categories/otros.html" class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Otros</a>
+    <a href="public/categories/mujer.html"
+      class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Mujer</a>
+    <a href="public/categories/hombre.html"
+      class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Hombre</a>
+    <a href="public/categories/ninos.html"
+      class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Niños/Bebés</a>
+    <a href="public/categories/otros.html"
+      class="block hover:text-[#fcdede] transition-colors duration-300 py-2">Otros</a>
   </div>
 
   <!-- Secondary navigation categories -->
   <nav aria-label="Categorías de productos"
-       class="category-nav hidden sm:flex justify-center space-x-10 mt-5 mb-2 select-none font-semibold font-mono max-w-5xl mx-auto px-4">
+    class="category-nav hidden sm:flex justify-center space-x-10 mt-5 mb-2 select-none font-semibold font-mono max-w-5xl mx-auto px-4">
     <a href="index.html" tabindex="0">Inicio</a>
     <a href="public/categories/mujer.html" tabindex="0">Mujer</a>
     <a href="public/categories/hombre.html" tabindex="0">Hombre</a>
@@ -97,7 +103,7 @@
     <a href="public/categories/otros.html" tabindex="0">Otros</a>
   </nav>
 
- <!-- "Ver todo" button 
+  <!-- "Ver todo" button 
   <button class="btn-ver-todo" aria-label="Ver todo el catálogo">Ver Todo</button> -->
 
   <!-- Breadcrumb -->
@@ -116,15 +122,14 @@
   <!-- Product Detail Page -->
   <div class="max-w-7xl mx-auto px-4 py-8">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-      
+
       <!-- Left: Image Gallery -->
       <div>
         <!-- Main Image -->
         <div class="mb-6">
-          <img id="main-product-image" src="" alt="" 
-               class="w-full h-96 lg:h-[500px] object-cover rounded-lg shadow-lg">
+          <img id="main-product-image" src="" alt="" class="w-full h-96 lg:h-[500px] object-cover rounded-lg shadow-lg">
         </div>
-        
+
         <!-- Thumbnail Gallery -->
         <div id="thumbnail-gallery" class="flex space-x-3 overflow-x-auto">
           <!-- Thumbnails will be inserted here -->
@@ -135,15 +140,15 @@
       <div>
         <!-- Product Name -->
         <h1 id="product-name" class="text-3xl font-bold text-gray-900 mb-4"></h1>
-        
+
         <!-- Price -->
         <div id="product-price" class="mb-6">
           <!-- Price will be inserted here -->
         </div>
-        
+
         <!-- SKU -->
         <p id="product-sku" class="text-sm text-gray-500 mb-4"></p>
-        
+
         <!-- Tags/Categories -->
         <div class="mb-6">
           <span class="text-sm text-gray-600">Categorías:</span>
@@ -154,7 +159,8 @@
 
         <!-- Color Selection -->
         <div class="mb-6">
-          <label class="block text-sm font-medium mb-3">Color: <span id="selected-color-name">Verde militar</span></label>
+          <label class="block text-sm font-medium mb-3">Color: <span id="selected-color-name">Verde
+              militar</span></label>
           <div id="color-options" class="flex space-x-3">
             <!-- Color options will be inserted here -->
           </div>
@@ -172,19 +178,23 @@
         <div class="mb-8">
           <label class="block text-sm font-medium mb-3">Cantidad</label>
           <div class="flex items-center space-x-4">
-            <button id="qty-decrease" class="w-10 h-10 border border-gray-300 rounded flex items-center justify-center hover:bg-gray-100">-</button>
+            <button id="qty-decrease"
+              class="w-10 h-10 border border-gray-300 rounded flex items-center justify-center hover:bg-gray-100">-</button>
             <span id="quantity-display" class="text-lg font-medium min-w-[2rem] text-center">1</span>
-            <button id="qty-increase" class="w-10 h-10 border border-gray-300 rounded flex items-center justify-center hover:bg-gray-100">+</button>
+            <button id="qty-increase"
+              class="w-10 h-10 border border-gray-300 rounded flex items-center justify-center hover:bg-gray-100">+</button>
           </div>
         </div>
 
         <!-- Add to Cart Button -->
-        <button id="add-to-cart-btn" class="w-full bg-[#d63629] text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-[#b22a26] transition-colors mb-4">
+        <button id="add-to-cart-btn"
+          class="w-full bg-[#d63629] text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-[#b22a26] transition-colors mb-4">
           AÑADIR AL CARRITO
         </button>
 
         <!-- WhatsApp Button -->
-        <button id="whatsapp-btn" class="w-full bg-[#25D366] text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-[#1ebe57] transition-colors">
+        <button id="whatsapp-btn"
+          class="w-full bg-[#25D366] text-white py-4 px-8 rounded-lg font-semibold text-lg hover:bg-[#1ebe57] transition-colors">
           CONSULTAR STOCK POR WHATSAPP
         </button>
       </div>
@@ -194,10 +204,13 @@
     <div class="mt-16">
       <div class="border-b border-gray-200">
         <nav class="-mb-px flex space-x-8">
-          <button class="tab-button active py-4 px-1 border-b-2 border-[#d63629] font-medium text-sm text-[#d63629]" data-tab="description">
+          <button class="tab-button active py-4 px-1 border-b-2 border-[#d63629] font-medium text-sm text-[#d63629]"
+            data-tab="description">
             DESCRIPCIÓN
           </button>
-          <button class="tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="dimensions">
+          <button
+            class="tab-button py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            data-tab="dimensions">
             TALLAS Y DIMENSIONES
           </button>
         </nav>
@@ -210,7 +223,7 @@
           <div class="prose max-w-none">
             <h3 class="text-lg font-semibold mb-4">Descripción del Producto</h3>
             <p id="product-description" class="text-gray-700 leading-relaxed"></p>
-            
+
             <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h4 class="font-semibold mb-2">Características:</h4>
@@ -247,11 +260,36 @@
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
-                <tr><td class="px-6 py-4 text-sm text-gray-900">XS</td><td class="px-6 py-4 text-sm text-gray-500">53.5</td><td class="px-6 py-4 text-sm text-gray-500">64</td><td class="px-6 py-4 text-sm text-gray-500">93</td></tr>
-                <tr><td class="px-6 py-4 text-sm text-gray-900">S</td><td class="px-6 py-4 text-sm text-gray-500">54.5</td><td class="px-6 py-4 text-sm text-gray-500">65</td><td class="px-6 py-4 text-sm text-gray-500">93</td></tr>
-                <tr><td class="px-6 py-4 text-sm text-gray-900">M</td><td class="px-6 py-4 text-sm text-gray-500">55.5</td><td class="px-6 py-4 text-sm text-gray-500">66</td><td class="px-6 py-4 text-sm text-gray-500">97</td></tr>
-                <tr><td class="px-6 py-4 text-sm text-gray-900">L</td><td class="px-6 py-4 text-sm text-gray-500">56.5</td><td class="px-6 py-4 text-sm text-gray-500">67</td><td class="px-6 py-4 text-sm text-gray-500">102</td></tr>
-                <tr><td class="px-6 py-4 text-sm text-gray-900">XL</td><td class="px-6 py-4 text-sm text-gray-500">57.5</td><td class="px-6 py-4 text-sm text-gray-500">68</td><td class="px-6 py-4 text-sm text-gray-500">109</td></tr>
+                <tr>
+                  <td class="px-6 py-4 text-sm text-gray-900">XS</td>
+                  <td class="px-6 py-4 text-sm text-gray-500">53.5</td>
+                  <td class="px-6 py-4 text-sm text-gray-500">64</td>
+                  <td class="px-6 py-4 text-sm text-gray-500">93</td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-4 text-sm text-gray-900">S</td>
+                  <td class="px-6 py-4 text-sm text-gray-500">54.5</td>
+                  <td class="px-6 py-4 text-sm text-gray-500">65</td>
+                  <td class="px-6 py-4 text-sm text-gray-500">93</td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-4 text-sm text-gray-900">M</td>
+                  <td class="px-6 py-4 text-sm text-gray-500">55.5</td>
+                  <td class="px-6 py-4 text-sm text-gray-500">66</td>
+                  <td class="px-6 py-4 text-sm text-gray-500">97</td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-4 text-sm text-gray-900">L</td>
+                  <td class="px-6 py-4 text-sm text-gray-500">56.5</td>
+                  <td class="px-6 py-4 text-sm text-gray-500">67</td>
+                  <td class="px-6 py-4 text-sm text-gray-500">102</td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-4 text-sm text-gray-900">XL</td>
+                  <td class="px-6 py-4 text-sm text-gray-500">57.5</td>
+                  <td class="px-6 py-4 text-sm text-gray-500">68</td>
+                  <td class="px-6 py-4 text-sm text-gray-500">109</td>
+                </tr>
               </tbody>
             </table>
             <p class="text-xs text-gray-500 mt-4">* Todas las medidas están en centímetros y pueden variar de 1-3 CM</p>
@@ -278,7 +316,7 @@
   <!-- Full Catalog Grid container -->
   <div id="full-catalog" class="hidden">
     <div class="banner-nuevos" aria-live="polite">CATÁLOGO COMPLETO</div>
-    
+
     <!-- Catalog UI: sort selector, results count, and grid container -->
     <div id="category-view" class="max-w-7xl mx-auto px-4 py-6">
       <div class="flex items-center justify-between mb-6">
@@ -287,7 +325,8 @@
         </div>
         <div class="flex items-center space-x-2">
           <label for="sort-select-old" class="text-sm text-gray-600">Ordenar por:</label>
-          <select id="sort-select-old" class="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-red-500">
+          <select id="sort-select-old"
+            class="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-red-500">
             <option value="featured">Destacados</option>
             <option value="price-low">Precio: Menor a Mayor</option>
             <option value="price-high">Precio: Mayor a Menor</option>
@@ -295,11 +334,11 @@
           </select>
         </div>
       </div>
-      
+
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6" id="catalog-grid-old">
         <!-- Products will be dynamically inserted here -->
       </div>
-      
+
       <!-- No results message -->
       <div id="no-results-old" class="hidden text-center py-12">
         <div class="text-gray-400 text-6xl mb-4">🔍</div>
@@ -317,18 +356,21 @@
         <h3 class="uppercase font-semibold mb-5 tracking-wide text-gray-400">Medios de pago</h3>
         <div class="flex items-center space-x-4 mb-6">
           <img src="public/icons/mercado-pago-logo.svg" class="h-10 w-auto object-contain" />
-          <button class="border border-white py-1 px-4 text-white text-xs uppercase tracking-wider hover:bg-white hover:text-gray-900 transition rounded">Efectivo</button>
+          <button
+            class="border border-white py-1 px-4 text-white text-xs uppercase tracking-wider hover:bg-white hover:text-gray-900 transition rounded">Efectivo</button>
         </div>
         <h3 class="uppercase font-semibold mb-3 tracking-wide text-gray-400">Medios de envío</h3>
         <div class="mb-6">
-          <button class="border border-white py-1 px-4 text-white text-xs uppercase tracking-wider hover:bg-white hover:text-gray-900 transition rounded">Retiro en Tienda Fisica</button>
+          <button
+            class="border border-white py-1 px-4 text-white text-xs uppercase tracking-wider hover:bg-white hover:text-gray-900 transition rounded">Retiro
+            en Tienda Fisica</button>
         </div>
         <p class="text-x text-white-400">
           Horarios: Lunes a Sabado
           <br />
-              Mañana      9:00am a 1:00pm
+          Mañana 9:00am a 1:00pm
           <br />
-              Tarde          5:00pm a 9:00pm
+          Tarde 5:00pm a 9:00pm
         </p>
       </div>
       <!-- Right block: Social and Contact -->
@@ -356,13 +398,14 @@
         <div>
           <h4 class="uppercase font-semibold mb-3 tracking-wide text-gray-400">Contacto</h4>
           <p class="flex items-center gap-2 mb-2 text-sm">
-            <p data-aos="fade-up"><i class="fa fa-envelope" aria-hidden="true"></i>&nbsp; rosema.ropa@gmail.com</p>
+          <p data-aos="fade-up"><i class="fa fa-envelope" aria-hidden="true"></i>&nbsp; rosema.ropa@gmail.com</p>
           </p>
           <p class="flex items-center gap-2 mb-2 text-sm">
-            <p data-aos="fade-up"><i class="fa fa-phone" aria-hidden="true"></i>&nbsp; +54 9 260 4381502</p>
+          <p data-aos="fade-up"><i class="fa fa-phone" aria-hidden="true"></i>&nbsp; +54 9 260 4381502</p>
           </p>
           <p class="flex items-center gap-2 font-semibold text-sm">
-            <p data-aos="fade-up"><i class="fa fa-home" aria-hidden="true" style="font-size:20px;"></i>&nbsp; Salto de las Rosas, Mendoza AR </p>
+          <p data-aos="fade-up"><i class="fa fa-home" aria-hidden="true" style="font-size:20px;"></i>&nbsp; Salto de las
+            Rosas, Mendoza AR </p>
           </p>
         </div>
       </div>
@@ -373,9 +416,11 @@
   </footer>
 
   <!-- WhatsApp floating icon -->
-  <a href="https://wa.me/5492604381502" target="_blank" rel="noopener noreferrer" aria-label="Abrir chat de WhatsApp" class="whatsapp-float" >
+  <a href="https://wa.me/5492604381502" target="_blank" rel="noopener noreferrer" aria-label="Abrir chat de WhatsApp"
+    class="whatsapp-float">
     <svg fill="white" viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="w-6 h-6">
-      <path d="M20.52 3.48A11.86 11.86 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.57 4.07 1.56 5.78L0 24l6.47-1.54A11.87 11.87 0 0012 24c6.63 0 12-5.37 12-12a11.86 11.86 0 00-3.48-8.52zM12 21.9a9.91 9.91 0 01-5.12-1.4l-.37-.22-3.84 .91.81-3.75-.24-.37a9.91 9.91 0 1111.67 3.63zm5.36-7.72c-.3-.15-1.76-.87-2.04-.97-.28-.1-.48-.15-.68.15-.2.3-.77.97-.94 1.17-.17.2-.34.22-.64.07-.3-.15-1.26-.47-2.4-1.5-.89-.8-1.49-1.79-1.66-2.09-.17-.3-.02-.46.13-.61.14-.14.3-.37.45-.56.15-.2.2-.33.3-.55.1-.22.05-.42-.02-.58-.07-.15-.68-1.63-.93-2.24-.24-.59-.49-.51-.68-.52-.18 0-.39 0-.6 0-.2 0-.58.08-.88.42-.3.34-1.14 1.12-1.14 2.72s1.17 3.16 1.33 3.38c.16.22 2.29 3.5 5.55 4.91.78.34 1.39.54 1.87.69.79.25 1.51.21 2.08.13.63-.1 1.94-.79 2.21-1.56.27-.76.27-1.41.19-1.56-.07-.15-.27-.24-.57-.39z"/>
+      <path
+        d="M20.52 3.48A11.86 11.86 0 0012 0C5.37 0 0 5.37 0 12c0 2.11.57 4.07 1.56 5.78L0 24l6.47-1.54A11.87 11.87 0 0012 24c6.63 0 12-5.37 12-12a11.86 11.86 0 00-3.48-8.52zM12 21.9a9.91 9.91 0 01-5.12-1.4l-.37-.22-3.84 .91.81-3.75-.24-.37a9.91 9.91 0 1111.67 3.63zm5.36-7.72c-.3-.15-1.76-.87-2.04-.97-.28-.1-.48-.15-.68.15-.2.3-.77.97-.94 1.17-.17.2-.34.22-.64.07-.3-.15-1.26-.47-2.4-1.5-.89-.8-1.49-1.79-1.66-2.09-.17-.3-.02-.46.13-.61.14-.14.3-.37.45-.56.15-.2.2-.33.3-.55.1-.22.05-.42-.02-.58-.07-.15-.68-1.63-.93-2.24-.24-.59-.49-.51-.68-.52-.18 0-.39 0-.6 0-.2 0-.58.08-.88.42-.3.34-1.14 1.12-1.14 2.72s1.17 3.16 1.33 3.38c.16.22 2.29 3.5 5.55 4.91.78.34 1.39.54 1.87.69.79.25 1.51.21 2.08.13.63-.1 1.94-.79 2.21-1.56.27-.76.27-1.41.19-1.56-.07-.15-.27-.24-.57-.39z" />
     </svg>
   </a>
 
@@ -384,4 +429,5 @@
 
 
 </body>
+
 </html>
